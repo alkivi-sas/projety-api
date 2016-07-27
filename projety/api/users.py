@@ -27,7 +27,7 @@ def get_users():
             $ref: '#/definitions/api_get_user_get_User'
     """
     users = User.query.order_by(User.updated_at.asc(), User.nickname.asc())
-    return jsonify({'users': [user.to_dict() for user in users.all()]})
+    return jsonify([user.to_dict() for user in users.all()])
 
 
 @api.route('/v1.0/users/<id>', methods=['GET'])

@@ -144,6 +144,15 @@ def createuser(name):
 
 
 @manager.command
+def api_test():
+    """Run unit tests."""
+    from swagger_spec_validator import validate_spec_url
+    test = validate_spec_url('http://127.0.0.1:5000/api/v1.0/spec')
+    if not test:
+        print 'Swagger DOC OK'
+
+
+@manager.command
 def test():
     """Run unit tests."""
     tests = subprocess.call(['python', '-c', 'import tests; tests.run()'])

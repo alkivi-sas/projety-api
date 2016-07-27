@@ -5,9 +5,9 @@ coverage
 eventlet
 flake8
 flake8-docstrings
+flasgger
 flask
 flask-cors
-flasgger
 flask_httpauth
 flask_script
 flask_sqlalchemy
@@ -20,4 +20,5 @@ pytest-cov
 pytest-flask
 redis
 salt
+swagger_spec_validator
 uWSGI
