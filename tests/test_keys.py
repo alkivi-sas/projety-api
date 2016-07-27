@@ -1,6 +1,9 @@
 """All the tests of our project."""
+import logging
 
 from utils import TestAPI
+
+logger = logging.getLogger(__name__)
 
 
 class TestKeys(TestAPI):
