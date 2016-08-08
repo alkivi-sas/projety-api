@@ -1,0 +1,16 @@
+coverage
+flask
+flask_sqlalchemy
+flask_httpauth
+flask_script
+salt
+eventlet
+gunicorn
+gevent
+greenlet
+uWSGI
+flake8
+flake8-docstrings
+pytest
+pytest-cov
+pytest-flask
