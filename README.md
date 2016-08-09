@@ -38,6 +38,7 @@ As a standart user (cf detailed installation):
 
 ##  Usage
 
+### Basic : Authentificatin
 By default listen on localhost port 5000.
 Get a token
 
@@ -46,3 +47,8 @@ Get a token
 Use the token then to get user
     
     curl -i -H "Authorization: Bearer previoustoken" http://127.0.0.1:5000/api/v1.0/users
+
+### List availables keys
+
+    curl -i -H "Authorization: Bearer previoustoken" http://127.0.0.1:5000/api/v1.0/keys
+

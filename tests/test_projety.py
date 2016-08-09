@@ -108,7 +108,6 @@ class TestAPI(object):
         r, s, h = self.post('/api/v1.0/tokens', basic_auth='alkivi:alkivi123')
         assert s == 200
         token = r['token']
-        print token
 
         # get users with good token
         r, s, h = self.get('/api/v1.0/users', token_auth=token)
@@ -121,3 +120,21 @@ class TestAPI(object):
         # use invalid token
         r, s, h = self.get('/api/v1.0/users', token_auth=token)
         assert s == 401
+
+    def test_keys(self):
+        """Test the structure of return of the salt keys."""
+        # need to have a valid auth
+        r, s, h = self.get('/api/v1.0/keys', token_auth='bad-token')
+        assert s == 401
+
+        # request a token
+        r, s, h = self.post('/api/v1.0/tokens', basic_auth='alkivi:alkivi123')
+        assert s == 200
+        token = r['token']
+
+        r, s, h = self.get('/api/v1.0/keys', token_auth=token)
+        assert s == 200
+        assert 'keys' in r
+        for subkeys in ['local', 'minions', 'minions_denied', 'minions_pre',
+                        'minions_rejected']:
+            assert subkeys in r['keys']
