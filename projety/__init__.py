@@ -9,11 +9,13 @@ logging.debug('init because of salt')
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 from config import config
 
 # Flask extensions
 db = SQLAlchemy()
+cors = CORS()
 
 # Import models so that they are registered with SQLAlchemy
 from . import models  # noqa
@@ -41,6 +43,7 @@ def create_app(config_name=None):
 
     # Initialize flask extensions
     db.init_app(app)
+    cors.init_app(app)
 
     # Reset logging due to salt mess
     fix_logger(app)
