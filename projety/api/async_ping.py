@@ -22,6 +22,7 @@ def async_ping_one(minion):
         abort(404)
 
     logger.debug('going to ping {0}'.format(minion))
+
     result = client.cmd(minion, 'test.ping')
     return jsonify({'ping': result})
 

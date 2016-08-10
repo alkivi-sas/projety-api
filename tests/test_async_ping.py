@@ -1,9 +1,12 @@
 """All the tests of our project."""
+import logging
 
 from utils import TestAPI
 
+logger = logging.getLogger(__name__)
 
-class TestTasks(TestAPI):
+
+class TestAsyncPing(TestAPI):
     """Test for users."""
 
     def test_async_ping_one(self):
@@ -14,15 +17,6 @@ class TestTasks(TestAPI):
         # ping one minion
         r, s, h = self.post('/api/v1.0/tasks/ping/{0}'.format(minion),
                             token_auth=token)
-        assert s == 202
-
-        url = h['Location']
-
-        # wait for asnychronous task to complete
-        while True:
-            r, s, h = self.get(url)
-            if s != 202:
-                break
         assert s == 200
 
         # check that we have the minion in keys
@@ -36,15 +30,6 @@ class TestTasks(TestAPI):
 
         r, s, h = self.post('/api/v1.0/tasks/ping', data={'target': [minion]},
                             token_auth=token)
-        assert s == 202
-
-        url = h['Location']
-
-        # wait for asnychronous task to complete
-        while True:
-            r, s, h = self.get(url)
-            if s != 202:
-                break
         assert s == 200
 
         # check that we have the minion in keys

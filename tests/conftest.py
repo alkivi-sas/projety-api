@@ -5,7 +5,7 @@ Define global fixture that are used during the tests.
 """
 import pytest
 
-from projety import create_app
+from projety import create_app, socketio
 from projety import db as _db
 from projety.models import User
 
@@ -48,3 +48,17 @@ def db(app, request):
 def client(app, db):
     """Session-wide client with app and db initialized."""
     return app.test_client()
+
+
+@pytest.fixture
+def app_class(app, request):
+    """To have app."""
+    if request.cls is not None:
+        request.cls.app = app
+
+
+@pytest.fixture
+def socketio_client_class(app, request, db):
+    """To have client socket.io."""
+    if request.cls is not None:
+        request.cls.socketio_client = socketio.test_client(app)

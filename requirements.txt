@@ -18,3 +18,5 @@ pytest-flask
 redis
 salt
 uWSGI
+Flask-SocketIO
+mock

@@ -1,8 +1,11 @@
 """Some helpers functions non related to any models."""
 
+import logging
 import time
 
 from flask import url_for as _url_for, _request_ctx_stack, current_app
+
+logger = logging.getLogger(__name__)
 
 
 def timestamp():

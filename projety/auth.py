@@ -23,11 +23,13 @@ def verify_password(nickname, password):
     return True
 
 
+@token_auth.error_handler
 @basic_auth.error_handler
-def password_error():
+def auth_error():
     """Return a 401 error to the client."""
     # To avoid login prompts in the browser, use the "Bearer" realm.
-    return (jsonify({'error': 'authentication required'}), 401,
+    message = {'status': 401, 'error': 'authentication required'}
+    return (jsonify(message), 401,
             {'WWW-Authenticate': 'Bearer realm="Authentication Required"'})
 
 
@@ -41,10 +43,3 @@ def verify_token(token):
     db.session.commit()
     g.current_user = user
     return True
-
-
-@token_auth.error_handler
-def token_error():
-    """Return a 401 error to the client."""
-    return (jsonify({'error': 'authentication required'}), 401,
-            {'WWW-Authenticate': 'Bearer realm="Authentication Required"'})
