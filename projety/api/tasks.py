@@ -1,151 +1,101 @@
 """Handles /keys endpoints."""
 import logging
 from functools import wraps
-import threading
-import time
-import uuid
+try:
+    from io import BytesIO
+except ImportError:  # pragma:  no cover
+    from cStringIO import StringIO as BytesIO
 
-from flask import abort, current_app, g, request, jsonify
-from werkzeug.exceptions import HTTPException, InternalServerError
+from flask import abort, g, request
+from werkzeug.exceptions import InternalServerError
+from celery import states
 
-from .. import db
-from ..salt import wheel, client
+from .. import celery
 from ..auth import token_auth
-from ..utils import timestamp, url_for
-from ..models import User
+from ..utils import url_for
 from . import api
+
+text_types = (str, bytes)
+try:
+    text_types += (unicode,)
+except NameError:
+    # no unicode on Python 3
+    pass
 
 logger = logging.getLogger(__name__)
 
-# Use to store our tasks
-tasks = {}
 
+@celery.task
+def run_flask_request(environ):
+    """Run our flask request using celery workers."""
+    from ..wsgi import app
 
-@api.before_app_first_request
-def before_first_request():
-    """Start a background thread that cleans up old tasks."""
-    def clean_old_tasks():
-        """Clean up old tasks from our in-memory data structure."""
-        global tasks
-        while True:
-            # Only keep tasks that are running or that finished less than 5
-            # minutes ago.
-            five_min_ago = timestamp() - 5 * 60
-            tasks = {id: task for id, task in tasks.items()
-                     if 't' not in task or task['t'] > five_min_ago}
-            time.sleep(60)
+    if '_wsgi.input' in environ:
+        environ['wsgi.input'] = BytesIO(environ['_wsgi.input'])
 
-    if not current_app.config['TESTING']:
-        thread = threading.Thread(target=clean_old_tasks)
-        thread.start()
+    # Create a request context similar to that of the original request
+    # so that the task can have access to flask.g, flask.request, etc.
+    with app.request_context(environ):
+        # Record the fact that we are running in the Celery worker now
+        g.in_celery = True
+
+        # Run the route function and record the response
+        try:
+            rv = app.full_dispatch_request()
+        except:
+            # If we are in debug mode we want to see the exception
+            # Else, return a 500 error
+            if app.debug:
+                raise
+            rv = app.make_response(InternalServerError())
+        return (rv.get_data(), rv.status_code, rv.headers)
 
 
 def async(f):
     """
-    Decorator to make task asynchronous.
+    Custom Decorator for async request.
 
     Decorator that transforms a sync route to asynchronous by running it
     in a background thread.
     """
     @wraps(f)
     def wrapped(*args, **kwargs):
-        def task(app, environ, current_user_nickname):
-            # Create a request context similar to that of the original request
-            # so that the task can have access to flask.g, flask.request, etc.
-            with app.request_context(environ):
-                # Install the current user in the thread's flask.g
-                current_user = User.query.filter_by(
-                    nickname=current_user_nickname).first()
-                if current_user is None:
-                    raise RuntimeError('Invalid user.')
-                g.current_user = current_user
-                try:
-                    # Run the route function and record the response
-                    tasks[id]['rv'] = f(*args, **kwargs)
-                except HTTPException as e:
-                    tasks[id]['rv'] = current_app.handle_http_exception(e)
-                except Exception as e:
-                    # The function raised an exception, so we set a 500 error
-                    tasks[id]['rv'] = InternalServerError()
-                    if current_app.debug:
-                        # We want to find out if something happened so reraise
-                        raise
-                finally:
-                    # We record the time of the response, to help in garbage
-                    # collecting old tasks
-                    tasks[id]['t'] = timestamp()
+        # if we are already running the request on the celery side, then we
+        # just called the wrapped function to allow the request to execute
+        if getattr(g, 'in_celery', False):
+            return f(*args, **kwargs)
 
-                    # close the database session
-                    db.session.remove()
-
-        # Assign an id to the asynchronous task
-        id = uuid.uuid4().hex
-
-        # Record the task, and then launch it
-        tasks[id] = {'task': threading.Thread(
-            target=task, args=(current_app._get_current_object(),
-                               request.environ, g.current_user.nickname))}
-        tasks[id]['task'].start()
+        # launch the task
+        environ = {k: v for k, v in request.environ.items()
+                   if isinstance(v, text_types)}
+        if 'wsgi.input' in request.environ:
+            environ['_wsgi.input'] = request.get_data()
+        t = run_flask_request.apply_async(args=(environ,))
 
         # Return a 202 response, with a link that the client can use to
         # obtain task status
-        return '', 202, {'Location': url_for('api.get_status', id=id)}
+        if t.state == states.PENDING or t.state == states.RECEIVED or \
+                t.state == states.STARTED:
+            return '', 202, {'Location': url_for('api.get_status', id=t.id)}
+
+        # If the task already finished, return its return value as response
+        return t.info
     return wrapped
 
 
 @api.route('/v1.0/tasks/status/<id>', methods=['GET'])
+@token_auth.login_required
 def get_status(id):
     """
-    Get the status of an async request.
+    Return the status of a request.
 
     Return status about an asynchronous task. If this request returns a 202
     status code, it means that task hasn't finished yet. Else, the response
     from the task is returned.
     """
-    task = tasks.get(id)
-    if task is None:
+    task = run_flask_request.AsyncResult(id)
+    if task.state == states.PENDING:
         abort(404)
-    if 'rv' not in task:
+    if task.state == states.RECEIVED or task.state == states.STARTED:
         return '', 202, {'Location': url_for('api.get_status', id=id)}
-    return task['rv']
-
-
-@api.route('/v1.0/tasks/ping/<minion>', methods=['POST'])
-@token_auth.login_required
-@async
-def async_ping_one(minion):
-    """Return a simple test.ping."""
-    all_keys = wheel.cmd('key.list_all')
-    keys = all_keys['minions']
-    if minion not in keys:
-        abort(404)
-
-    logger.debug('going to ping {0}'.format(minion))
-    result = client.cmd(minion, 'test.ping')
-    return jsonify({'ping': result})
-
-
-@api.route('/v1.0/tasks/ping', methods=['POST'])
-@token_auth.login_required
-@async
-def async_ping():
-    """Return the list of salt keys."""
-    data = request.json
-    targets = data['target']
-
-    all_keys = wheel.cmd('key.list_all')
-    keys = all_keys['minions']
-
-    minions = []
-    for m in targets:
-        logger.debug('test {0}'.format(m))
-        if m in keys:
-            minions.append(m)
-
-    if not minions:
-        abort(404)
-
-    real_target = ','.join(minions)
-    logger.debug('Going to ping {0} as a list'.format(real_target))
-    result = client.cmd(real_target, 'test.ping', expr_form='list')
-    return jsonify({'ping': result})
+    return task.info

@@ -13,12 +13,27 @@ It can be use to :
 import subprocess
 import sys
 
-from flask_script import Manager
+from flask_script import Manager, Command
 
 from projety import create_app, db
 from projety.models import User
 
 manager = Manager(create_app)
+
+
+class CeleryWorker(Command):
+    """Starts the celery worker."""
+
+    name = 'celery'
+    capture_all_args = True
+
+    def run(self, argv):
+        """Execute celery."""
+        ret = subprocess.call(
+            ['celery', 'worker', '-A', 'projety.celery'] + argv)
+        sys.exit(ret)
+
+manager.add_command("celery", CeleryWorker())
 
 
 @manager.command
