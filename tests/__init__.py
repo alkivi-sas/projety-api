@@ -16,7 +16,7 @@ def run():
     cov.start()
 
     # run tests
-    ok = pytest.main(['--ignore', 'venv/', '-v'])
+    ok = pytest.main(['--ignore', 'venv/', '-v', '-x'])
 
     # print coverage report
     cov.stop()

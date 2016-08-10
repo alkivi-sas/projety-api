@@ -1,4 +1,4 @@
-"""All the tests of our project."""
+"""Basic class for our test."""
 
 import base64
 import json
@@ -14,6 +14,31 @@ class TestAPI(object):
 
     It use the fixture client_class with allows us to self.client.
     """
+
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def setup(self):
+        """Fixture for variable common in tests."""
+        self._valid_token = None
+        self._valid_minion = None
+
+    @property
+    def valid_token(self):
+        """Get a token we know is valid."""
+        if not self._valid_token:
+            r, s, h = self.post('/api/v1.0/tokens',
+                                basic_auth='alkivi:alkivi123')
+            assert s == 200
+            self._valid_token = r['token']
+        return self._valid_token
+
+    @property
+    def valid_minion(self):
+        """Get a minion on the current salt master."""
+        if not self._valid_minion:
+            r, s, h = self.get('/api/v1.0/keys', token_auth=self.valid_token)
+            self._valid_minion = r['keys']['minions'][0]
+        return self._valid_minion
 
     def get_headers(self, basic_auth=None, token_auth=None):
         """Helper to get manage headers for requests."""
@@ -89,52 +114,3 @@ class TestAPI(object):
             except:
                 pass
         return body, rv.status_code, rv.headers
-
-    def test_users(self):
-        """Test user access with or without token."""
-        # get users without auth
-        r, s, h = self.get('/api/v1.0/users')
-        assert s == 401
-
-        # get users with bad auth
-        r, s, h = self.get('/api/v1.0/users', token_auth='bad-token')
-        assert s == 401
-
-        # request a token with wrong password
-        r, s, h = self.post('/api/v1.0/tokens', basic_auth='alkivi:toto')
-        assert s == 401
-
-        # request a token
-        r, s, h = self.post('/api/v1.0/tokens', basic_auth='alkivi:alkivi123')
-        assert s == 200
-        token = r['token']
-
-        # get users with good token
-        r, s, h = self.get('/api/v1.0/users', token_auth=token)
-        assert s == 200
-
-        # revoke token
-        r, s, h = self.delete('/api/v1.0/tokens', token_auth=token)
-        assert s == 204
-
-        # use invalid token
-        r, s, h = self.get('/api/v1.0/users', token_auth=token)
-        assert s == 401
-
-    def test_keys(self):
-        """Test the structure of return of the salt keys."""
-        # need to have a valid auth
-        r, s, h = self.get('/api/v1.0/keys', token_auth='bad-token')
-        assert s == 401
-
-        # request a token
-        r, s, h = self.post('/api/v1.0/tokens', basic_auth='alkivi:alkivi123')
-        assert s == 200
-        token = r['token']
-
-        r, s, h = self.get('/api/v1.0/keys', token_auth=token)
-        assert s == 200
-        assert 'keys' in r
-        for subkeys in ['local', 'minions', 'minions_denied', 'minions_pre',
-                        'minions_rejected']:
-            assert subkeys in r['keys']
