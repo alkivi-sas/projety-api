@@ -6,13 +6,12 @@ from flask import abort, request, jsonify
 from ..salt import wheel, client
 from ..auth import token_auth
 from . import api
+from .async import async
 
 logger = logging.getLogger(__name__)
 
 
-@api.route('/v1.0/ping/<minion>', methods=['POST'])
-@token_auth.login_required
-def ping_one(minion):
+def _ping_one(minion):
     """Return a simple test.ping."""
     all_keys = wheel.cmd('key.list_all')
     keys = all_keys['minions']
@@ -25,10 +24,8 @@ def ping_one(minion):
     return jsonify(result)
 
 
-@api.route('/v1.0/ping', methods=['POST'])
-@token_auth.login_required
-def ping():
-    """Return the list of salt keys."""
+def _ping():
+    """Return the simple test.ping but can be on a list."""
     data = request.json
     targets = data['target']
 
@@ -48,3 +45,33 @@ def ping():
     logger.debug('Going to ping {0} as a list'.format(real_target))
     result = client.cmd(real_target, 'test.ping', expr_form='list')
     return jsonify(result)
+
+
+@api.route('/v1.0/ping/<minion>', methods=['POST'])
+@token_auth.login_required
+def ping_one(minion):
+    """Perform synchronous test.ping."""
+    return _ping_one(minion)
+
+
+@api.route('/v1.0/ping', methods=['POST'])
+@token_auth.login_required
+def ping():
+    """Perform synchronous test.ping for a list."""
+    return _ping()
+
+
+@api.route('/v1.0/tasks/ping/<minion>', methods=['POST'])
+@async
+@token_auth.login_required
+def async_ping_one(minion):
+    """Perform asynchronous test.ping."""
+    return _ping_one(minion)
+
+
+@api.route('/v1.0/tasks/ping', methods=['POST'])
+@async
+@token_auth.login_required
+def async_ping():
+    """Perform asynchronous test.ping for a list."""
+    return _ping()
