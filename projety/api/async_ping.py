@@ -6,7 +6,7 @@ from flask import abort, request, jsonify
 from ..salt import wheel, client
 from ..auth import token_auth
 from . import api
-from .tasks import async
+from .async import async
 
 logger = logging.getLogger(__name__)
 

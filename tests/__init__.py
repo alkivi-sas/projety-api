@@ -21,6 +21,6 @@ def run():
     # print coverage report
     cov.stop()
     print('')
-    cov.report(omit=['manage.py', 'tests/*', 'venv*/*'])
+    cov.report(omit=['manage.py', 'tests/*', 'venv*/*', '/var/cache/*'])
 
     sys.exit(0 if ok else 1)

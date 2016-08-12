@@ -4,7 +4,7 @@ import logging
 import mock
 import pytest
 
-from projety.api.tasks import async
+from projety.api.async import async
 from utils import TestAPI
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class TestAsyncPing(TestAPI):
         token = self.valid_token
         minion = self.valid_minion
 
-        with mock.patch('projety.api.tasks.run_flask_request.apply_async',
+        with mock.patch('projety.api.async.run_flask_request.apply_async',
                         return_value=mock.MagicMock(state='PENDING')) as m:
             r, s, h = self.post(
                 '/api/v1.0/tasks/ping',
@@ -37,7 +37,7 @@ class TestAsyncPing(TestAPI):
             logger.warning(environ)
             assert environ['_wsgi.input'] == b'{"target": ["%s"]}' % minion
 
-        with mock.patch('projety.api.tasks.run_flask_request.apply_async',
+        with mock.patch('projety.api.async.run_flask_request.apply_async',
                         return_value=mock.MagicMock(state='STARTED')) as m:
             r, s, h = self.post(
                 '/api/v1.0/tasks/ping',
@@ -49,7 +49,7 @@ class TestAsyncPing(TestAPI):
             logger.warning(environ)
             assert environ['_wsgi.input'] == b'{"target": ["%s"]}' % minion
 
-        with mock.patch('projety.api.tasks.run_flask_request.apply_async',
+        with mock.patch('projety.api.async.run_flask_request.apply_async',
                         return_value=mock.MagicMock(
                             state='SUCCESS',
                             info=('foo', 201, {'a': 'b'}))) as m:
