@@ -24,8 +24,7 @@ class TestSocketIO(TestAPI):
         assert s == 200
 
         # check that we have the minion in keys
-        assert 'ping' in r
-        assert minion in r['ping']
+        assert minion in r
 
         # then start socketio
         client1 = socketio.test_client(self.app)

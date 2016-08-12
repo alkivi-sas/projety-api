@@ -11,4 +11,4 @@ from . import api
 def get_keys():
     """Return the list of salt keys."""
     keys = wheel.cmd('key.list_all')
-    return jsonify({'keys': keys})
+    return jsonify(keys)

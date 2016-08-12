@@ -6,11 +6,12 @@ try:
 except ImportError:  # pragma:  no cover
     from cStringIO import StringIO as BytesIO
 
-from flask import abort, g, request
+from flask import abort, g, request, jsonify
 from werkzeug.exceptions import InternalServerError
 from celery import states
 
 from .. import celery
+from ..salt import get_functions
 from ..auth import token_auth
 from ..utils import url_for
 from . import api
@@ -85,6 +86,13 @@ def async(f):
         # This would be the case when CELERY_ALWAYS_EAGER is set to True.
         return t.info
     return wrapped
+
+
+@api.route('/v1.0/tasks', methods=['GET'])
+@token_auth.login_required
+def get_salt_functions():
+    """Return the list of all tasks we can do."""
+    return jsonify(get_functions())
 
 
 @api.route('/v1.0/tasks/status/<id>', methods=['GET'])

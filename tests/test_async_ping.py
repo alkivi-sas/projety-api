@@ -20,8 +20,7 @@ class TestAsyncPing(TestAPI):
         assert s == 200
 
         # check that we have the minion in keys
-        assert 'ping' in r
-        assert minion in r['ping']
+        assert minion in r
 
     def test_async_ping(self):
         """Test several pings."""
@@ -33,5 +32,4 @@ class TestAsyncPing(TestAPI):
         assert s == 200
 
         # check that we have the minion in keys
-        assert 'ping' in r
-        assert minion in r['ping']
+        assert minion in r

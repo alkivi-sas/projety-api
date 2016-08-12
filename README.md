@@ -93,6 +93,12 @@ Use the token then to get user
         -H "Authorization: Bearer ${TOKEN}" \
         ${URL}/api/v1.0/keys
 
+### List availables tasks
+
+    curl -i -X GET \
+        -H "Authorization: Bearer ${TOKEN}" \
+        ${URL}/api/v1.0/tasks
+
 ### Ping machines (salt ping)
 
 #### Ping one minion synchronously
@@ -162,7 +168,5 @@ And you'll get full answer
     Content-Length: 50
 
     {
-      "ping": {
-          "my_awesome_minion": true
-        }
+      "my_awesome_minion": true
     }

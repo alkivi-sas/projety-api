@@ -24,7 +24,7 @@ def async_ping_one(minion):
     logger.debug('going to ping {0}'.format(minion))
 
     result = client.cmd(minion, 'test.ping')
-    return jsonify({'ping': result})
+    return jsonify(result)
 
 
 @api.route('/v1.0/tasks/ping', methods=['POST'])
@@ -50,4 +50,4 @@ def async_ping():
     real_target = ','.join(minions)
     logger.debug('Going to ping {0} as a list'.format(real_target))
     result = client.cmd(real_target, 'test.ping', expr_form='list')
-    return jsonify({'ping': result})
+    return jsonify(result)

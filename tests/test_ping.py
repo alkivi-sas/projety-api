@@ -22,8 +22,7 @@ class TestPing(TestAPI):
         assert s == 200
 
         # check that we have the minion in keys
-        assert 'ping' in r
-        assert minion in r['ping']
+        assert minion in r
 
     def test_ping(self):
         """Test several pings."""
@@ -34,5 +33,4 @@ class TestPing(TestAPI):
                             token_auth=token)
 
         # check that we have the minion in keys
-        assert 'ping' in r
-        assert minion in r['ping']
+        assert minion in r
