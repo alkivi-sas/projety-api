@@ -13,6 +13,8 @@ It can be use to :
 import os
 import subprocess
 import sys
+import random
+import string
 
 import eventlet
 eventlet.monkey_patch()
@@ -24,6 +26,13 @@ from projety import create_app, db, socketio
 from projety.models import User
 
 manager = Manager(create_app)
+
+
+def generate_password(length=15):
+    """Helper to generate password for new users."""
+    chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+    random.seed = (os.urandom(1024))
+    return ''.join(random.choice(chars) for i in range(length))
 
 
 class Server(_Server):
@@ -113,16 +122,24 @@ def createdb(drop_first=False):
         db.drop_all()
     db.create_all()
 
-    user_to_add = []
-    for user in ['anthony', 'luc', 'ronan']:
-        test = User.query.filter_by(nickname=user).first()
-        if not test:
-            to_add = User(nickname=user, password='alkivi123')
-            user_to_add.append(to_add)
 
-    if user_to_add:
-        db.session.add_all(user_to_add)
-        db.session.commit()
+@manager.command
+def createuser(name):
+    """Create a user and display its password and token."""
+    test = User.query.filter_by(nickname=name).first()
+    if test:
+        print 'User {0} already exist'.format(name)
+        return
+
+    password = generate_password()
+    user = User(nickname=name, password=password)
+    db.session.add(user)
+    db.session.commit()
+
+    print 'User {0} created with password {1}'.format(user.nickname, password)
+    print 'Here is a valid token : {0}'.format(user.generate_token())
+    db.session.add(user)
+    db.session.commit()
 
 
 @manager.command

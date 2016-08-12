@@ -48,6 +48,10 @@ There is two components. First the server to dispatch request
 
     python manage.py runserver
 
+At this time, bug with salt in debug mode so run the server using gunicorn
+
+    ./webserver/gunicorn-eventlet.sh
+
 The second component of this application is the Celery workers, which must be
 started with the following command:
 
@@ -56,7 +60,15 @@ started with the following command:
 
 ##  Usage
 
-### Basic : Authentificatin
+### Before start
+
+You need to create a new user
+
+    python manage.py createuser awesome_user
+
+The password will then be displayed on the command line
+
+### Basic : Authentification
 
 By default listen on localhost port 5000. I'll defined the url as:
 
@@ -81,13 +93,15 @@ Use the token then to get user
         -H "Authorization: Bearer ${TOKEN}" \
         ${URL}/api/v1.0/keys
 
-### Ping one minion
+### Ping machines (salt ping)
+
+#### Ping one minion synchronously
 
     curl -i -X POST \
         -H "Authorization: Bearer ${TOKEN}" \
         ${URL}/api/v1.0/ping/<minion_from_keys>
 
-### Ping a list minion
+#### Ping a list minion synchronously
 
     curl -X POST -i \
         -H "Content-Type: application/json" \
@@ -95,3 +109,60 @@ Use the token then to get user
         -d '{"target":["minion1","minion2"]}' \
         ${URL}/api/v1.0/ping
 
+#### Ping one minion asynchronously
+
+    curl -i -X POST \
+        -H "Authorization: Bearer ${TOKEN}" \
+        ${URL}/api/v1.0/tasks/ping/<minion_from_keys>
+
+#### Ping a list minion asynchronously
+
+    curl -X POST -i \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -d '{"target":["minion1","minion2"]}' \
+        ${URL}/api/v1.0/tasksping
+
+## Working with asynchronous request
+
+When performing and asynchronous request, you will get a 202.
+In the response, there is a header location.
+Use this location using GET, you will get a 202 until the end
+of the request and then the response.
+
+Example with async ping
+
+    curl -i -X POST \
+         -H "Authorization: Bearer ${TOKEN}" \
+         ${URL}/api/v1.0/tasks/ping/my_awesome_minion
+
+In the answer you will get
+
+    HTTP/1.1 202 ACCEPTED
+    Server: gunicorn/19.6.0
+    Date: Fri, 12 Aug 2016 08:37:24 GMT
+    Connection: keep-alive
+    Location: http://127.0.0.1:5000/api/v1.0/tasks/status/a1d652eb-0311-49b9-abbe-aa141ddd7447
+    Content-Type: text/html; charset=utf-8
+    Content-Length: 0
+
+Now just get the location 
+
+    curl -i \
+        -H "Authorization: Bearer ${TOKEN}" \
+        ${URL}/api/v1.0/tasks/status/a1d652eb-0311-49b9-abbe-aa141ddd7447
+
+And you'll get full answer
+
+    HTTP/1.1 200 OK
+    Server: gunicorn/19.6.0
+    Date: Fri, 12 Aug 2016 08:39:01 GMT
+    Connection: keep-alive
+    Content-Type: application/json
+    Content-Length: 50
+
+    {
+      "ping": {
+          "my_awesome_minion": true
+        }
+    }
