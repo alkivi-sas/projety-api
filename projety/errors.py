@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 def not_found(e):
     """Send a correct json for 404."""
-    logger.warning('dnzajdnzajdnazjkdnazjkdnzakj')
     response = jsonify({'status': 404, 'error': 'not found',
                         'message': 'invalid resource URI'})
     response.status_code = 404
