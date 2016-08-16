@@ -1,7 +1,7 @@
 """Handles /keys endpoints."""
 import logging
 
-from flask import jsonify, abort
+from flask import jsonify
 from celery import states
 
 from ..salt import get_functions
@@ -52,8 +52,7 @@ def get_status(id):
         description: Real result of the task
     """
     task = run_flask_request.AsyncResult(id)
-    if task.state == states.PENDING:
-        abort(404)
-    if task.state == states.RECEIVED or task.state == states.STARTED:
-        return '', 202, {'Location': url_for('api.get_status', id=id)}
+    if task.state in [states.PENDING, states.RECEIVED, states.STARTED]:
+        return '', 202, {'Location': url_for('api.get_status', id=id),
+                         'Access-Control-Expose-Headers': 'Location'}
     return task.info

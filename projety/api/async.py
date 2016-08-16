@@ -77,7 +77,9 @@ def async(f):
         # obtain task status that is based on the Celery task id.
         if t.state == states.PENDING or t.state == states.RECEIVED or \
                 t.state == states.STARTED:
-            return '', 202, {'Location': url_for('api.get_status', id=t.id)}
+                    return '', 202, {
+                           'Location': url_for('api.get_status', id=t.id),
+                           'Access-Control-Expose-Headers': 'Location'}
 
         # If the task already finished, return its return value as response.
         # This would be the case when CELERY_ALWAYS_EAGER is set to True.
