@@ -1,3 +1,4 @@
+Flask-SocketIO
 amqp
 celery
 coverage
@@ -6,17 +7,17 @@ flake8
 flake8-docstrings
 flask
 flask-cors
+flasgger
 flask_httpauth
 flask_script
 flask_sqlalchemy
 gevent
 greenlet
 gunicorn
+mock
 pytest
 pytest-cov
 pytest-flask
 redis
 salt
 uWSGI
-Flask-SocketIO
-mock

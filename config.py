@@ -17,6 +17,27 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CELERY_CONFIG = {}
     SOCKETIO_MESSAGE_QUEUE = os.environ.get('CELERY_BROKER_URL', 'redis://')
+    SWAGGER = {'specs':
+               [
+                   {
+                       'version': '1.0',
+                       'title': 'Api v1.0',
+                       'endpoint': 'api',
+                       'description': 'This is the version 1 of our API',
+                       'route': '/api/v1.0/spec',
+                   },
+               ],
+               'securityDefinitions': {
+                   'token': {
+                       'type': 'apiKey',
+                       'in': 'header',
+                       'name': 'Authorization'
+                   },
+                   'basic': {
+                       'type': 'basic'
+                   }
+               },
+               }
 
 
 class DevelopmentConfig(Config):

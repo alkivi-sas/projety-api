@@ -62,14 +62,70 @@ def _ping():
 @api.route('/v1.0/ping/<minion>', methods=['POST'])
 @token_auth.login_required
 def ping_one(minion):
-    """Perform synchronous test.ping."""
+    """
+    Perform synchronous test.ping on a minion.
+
+    Before performing the task, ensure that the minion is present
+    in keys. Return 404 if not
+    ---
+    tags:
+      - ping
+    security:
+      - token: []
+    parameters:
+      - name: minion
+        in: path
+        description: minion to ping
+        required: true
+        type: string
+    responses:
+      200:
+        description: Returns the result
+        schema:
+          id: ping
+          required:
+            - minion
+          properties:
+            minion:
+              type: boolean
+      404:
+        description: The minion is not in the valid keys
+    """
     return _ping_one(minion)
 
 
 @api.route('/v1.0/ping', methods=['POST'])
 @token_auth.login_required
 def ping():
-    """Perform synchronous test.ping for a list."""
+    """
+    Perform synchronous test.ping on a list of minions.
+
+    Before performing the task, ensure that all the minions are present
+    in keys. All minions that are not in the keys are removed.
+    ---
+    tags:
+      - ping
+    security:
+      - token: []
+    parameters:
+      - name: target
+        in: body
+        description: minion to ping
+        required: true
+        type: string
+    responses:
+      200:
+        description: Returns the result
+        schema:
+          id: ping
+          required:
+            - minion
+          properties:
+            minion:
+              type: boolean
+      404:
+        description: All the minions are not in the valid keys
+    """
     return _ping()
 
 
@@ -77,7 +133,41 @@ def ping():
 @async
 @token_auth.login_required
 def async_ping_one(minion):
-    """Perform asynchronous test.ping."""
+    """
+    Perform asynchronous test.ping.
+
+    Before performing the task, ensure that all the minions are present
+    in keys. All minions that are not in the keys are removed.
+    ---
+    tags:
+      - tasks
+    security:
+      - token: []
+    parameters:
+      - name: minion
+        in: path
+        description: minion to ping
+        required: true
+        type: string
+    responses:
+      202:
+        description: While the task is pending
+        headers:
+          Location:
+            description: The location to get final result of the task
+            type: string
+      200:
+        description: When the task is finished
+        schema:
+          id: ping
+          required:
+            - minion
+          properties:
+            minion:
+              type: boolean
+      404:
+        description: The minion is not in the valid keys
+    """
     return _ping_one(minion)
 
 
@@ -85,5 +175,39 @@ def async_ping_one(minion):
 @async
 @token_auth.login_required
 def async_ping():
-    """Perform asynchronous test.ping for a list."""
+    """
+    Perform asynchronous test.ping on a list of minions.
+
+    Before performing the task, ensure that all the minions are present
+    in keys. All minions that are not in the keys are removed.
+    ---
+    tags:
+      - ping
+    security:
+      - token: []
+    parameters:
+      - name: target
+        in: body
+        description: minion to ping
+        required: true
+        type: string
+    responses:
+      202:
+        description: While the task is pending
+        headers:
+          Location:
+            description: The location to get final result of the task
+            type: string
+      200:
+        description: When the task is finished
+        schema:
+          id: ping
+          required:
+            - minion
+          properties:
+            minion:
+              type: boolean
+      404:
+        description: All the minions are not in the valid keys
+    """
     return _ping()

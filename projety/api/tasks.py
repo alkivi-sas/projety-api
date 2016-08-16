@@ -30,6 +30,26 @@ def get_status(id):
     Return status about an asynchronous task. If this request returns a 202
     status code, it means that task hasn't finished yet. Else, the response
     from the task is returned.
+    ---
+    tags:
+      - tasks
+    security:
+      - token: []
+    parameters:
+      - name: id
+        in: path
+        description: id of the task
+        required: true
+        type: string
+    responses:
+      202:
+        description: The tasks in the finished yet
+        headers:
+          Location:
+            description: The location to get final result
+            type: string
+      200:
+        description: Real result of the task
     """
     task = run_flask_request.AsyncResult(id)
     if task.state == states.PENDING:

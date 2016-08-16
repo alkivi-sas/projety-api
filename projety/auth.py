@@ -13,7 +13,14 @@ token_auth = HTTPTokenAuth('Bearer')
 
 @basic_auth.verify_password
 def verify_password(nickname, password):
-    """Password verification callback."""
+    """
+    Password verification callback.
+
+    ---
+    securityDefinitions:
+      UserSecurity:
+        type: basic
+    """
     user = User.query.filter_by(nickname=nickname).first()
     if user is None or not user.verify_password(password):
         return False
@@ -35,7 +42,16 @@ def auth_error():
 
 @token_auth.verify_token
 def verify_token(token):
-    """Token verification callback."""
+    """
+    Token verification callback.
+
+    ---
+    securityDefinitions:
+      UserSecurity:
+        type: apiKey
+        in: header
+        name: token
+    """
     user = User.query.filter_by(token=token).first()
     if user is None:
         return False
