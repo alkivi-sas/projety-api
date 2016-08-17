@@ -37,6 +37,7 @@ class Config(object):
                        'type': 'basic'
                    }
                },
+               'headers': [],
                }
 
 
