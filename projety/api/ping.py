@@ -170,7 +170,7 @@ def async_ping():
     in keys. All minions that are not in the keys are removed.
     ---
     tags:
-      - ping
+      - tasks
     security:
       - token: []
     parameters:
