@@ -32,23 +32,23 @@ def get_keys():
             local:
               type: array
               items:
-                type: strings
+                type: string
             minions:
               type: array
               items:
-                type: strings
+                type: string
             minions_denied:
               type: array
               items:
-                type: strings
+                type: string
             minions_pre:
               type: array
               items:
-                type: strings
+                type: string
             minions_rejected:
               type: array
               items:
-                type: strings
+                type: string
     """
     keys = wheel.cmd('key.list_all')
     return jsonify(keys)

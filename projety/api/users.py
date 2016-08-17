@@ -63,13 +63,16 @@ def get_user(id):
               type: string
               description: name for user
             created_at:
-              type: datetime
+              type: string
+              format: date-time
               description: date of creation
             updated_at:
-              type: datetime
+              type: string
+              format: date-time
               description: date of creation
             last_seen_at:
-              type: datetime
+              type: string
+              format: date-time
               description: date of creation
     """
     return jsonify(User.query.get_or_404(id).to_dict())

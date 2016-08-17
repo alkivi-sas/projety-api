@@ -116,13 +116,7 @@ def ping():
     responses:
       200:
         description: Returns the result
-        schema:
-          id: ping
-          required:
-            - minion
-          properties:
-            minion:
-              type: boolean
+        $ref: '#/definitions/api_ping_one_post_ping'
       404:
         description: All the minions are not in the valid keys
     """
@@ -158,13 +152,7 @@ def async_ping_one(minion):
             type: string
       200:
         description: When the task is finished
-        schema:
-          id: ping
-          required:
-            - minion
-          properties:
-            minion:
-              type: boolean
+        $ref: '#/definitions/api_ping_one_post_ping'
       404:
         description: The minion is not in the valid keys
     """
@@ -200,13 +188,7 @@ def async_ping():
             type: string
       200:
         description: When the task is finished
-        schema:
-          id: ping
-          required:
-            - minion
-          properties:
-            minion:
-              type: boolean
+        $ref: '#/definitions/api_ping_one_post_ping'
       404:
         description: All the minions are not in the valid keys
     """

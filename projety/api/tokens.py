@@ -52,7 +52,8 @@ def revoke_token():
     security:
       - token: []
     responses:
-      204: {}
+      204:
+        description: Token is deleted
     """
     g.current_user.token = None
     db.session.add(g.current_user)
