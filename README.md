@@ -20,6 +20,12 @@ A broker for messages in necessary, default to redis (rabbitmq to come)
 
     apt-get install redis-server
 
+## Salt Master configuration
+
+If you want all the service using a regular user, you need to changes the user who runs the salt-master.
+Check https://docs.saltstack.com/en/latest/ref/configuration/nonroot.html for more info.
+We are assuming root is running the master in the following
+
 ## Detailed installation
 
 All is done using a standart user.
@@ -42,7 +48,7 @@ At every commit, we check for lint and test errors.
 ## Running
 
 So far, due to salt implemention of wheel, we should start the program as root.
-Moving to a standard user is in the backlog.
+Configure salt-master to run as a normal user to fix it
 
 There is two components. First the server to dispatch request
 
@@ -67,6 +73,7 @@ You need to create a new user
     python manage.py createuser awesome_user
 
 The password will then be displayed on the command line
+If you already have a user, you can do it again, it will display the token
 
 ### Basic : Authentification
 
@@ -170,3 +177,9 @@ And you'll get full answer
     {
       "my_awesome_minion": true
     }
+
+## Testing the API
+
+Check https://swagger.alkivi.fr and points to /api/v1.0/spec of the API url.
+You will be able to get a token (using authorization basic).
+Once you'll have a token, use Bearer ${TOKEN} in the token authorization
