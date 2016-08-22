@@ -52,8 +52,11 @@ def verify_token(token):
         in: header
         name: token
     """
-    user = User.query.filter_by(token=token).first()
+    user = User.verify_auth_token(token)
     if user is None:
+        return False
+    if user.token is None:
+        # Revoke token
         return False
     db.session.add(user)
     db.session.commit()

@@ -1,10 +1,9 @@
 """Manage the models in our app."""
 
-import binascii
-import os
-
-from flask import abort
+from flask import abort, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import (TimedJSONWebSignatureSerializer
+                          as Serializer, BadSignature, SignatureExpired)
 
 from . import db
 from .utils import timestamp, url_for
@@ -36,10 +35,33 @@ class User(db.Model):
         """For basic_auth check."""
         return check_password_hash(self.password_hash, password)
 
-    def generate_token(self, expiration=600):
+    def generate_auth_token(self, expiration=600):
         """Generate a token on the fly."""
-        self.token = binascii.hexlify(os.urandom(32)).decode('utf-8')
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        self.token = s.dumps({'id': self.id})
         return self.token
+
+    @staticmethod
+    def verify_auth_token(token):
+        """
+        Check is the token given is valid.
+
+        In case where the token raise SignatureExpired, null the token
+        property for the user.
+        """
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except SignatureExpired as e:
+            # If we have a token for the user, null it
+            user = User.query.get(e.payload['id'])
+            if user.token:
+                user.token = None
+            return None  # valid token, but expired
+        except BadSignature:
+            return None  # invalid token
+        user = User.query.get(data['id'])
+        return user
 
     @staticmethod
     def create(data):

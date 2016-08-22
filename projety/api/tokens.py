@@ -1,10 +1,14 @@
 """Handle tokens endpoints."""
+import logging
 
-from flask import jsonify, g
+from flask import jsonify, g, request
 
 from .. import db
+from ..exceptions import ValidationError
 from ..auth import basic_auth, token_auth
 from . import api
+
+logger = logging.getLogger(__name__)
 
 
 @api.route('/v1.0/tokens', methods=['POST'])
@@ -20,6 +24,12 @@ def new_token():
       - tokens
     security:
       - basic: []
+    parameters:
+      - name: expiration
+        in: query
+        description: Token expiration in seconds
+        type: integer
+        default: 600
     responses:
       200:
         description: Returns a valid token
@@ -32,8 +42,14 @@ def new_token():
               type: string
               description: A valid token for the user
     """
+    expiration = request.args.get('expiration', 600)
+    try:
+        expiration = int(expiration)
+    except ValueError:
+        raise ValidationError('expiration parameter is not an integer')
+
     if g.current_user.token is None:
-        g.current_user.generate_token()
+        g.current_user.generate_auth_token(expiration)
         db.session.add(g.current_user)
         db.session.commit()
     return jsonify({'token': g.current_user.token})

@@ -1,6 +1,10 @@
 """All the tests of our project."""
+import logging
 
 from utils import TestAPI
+from time import sleep
+
+logger = logging.getLogger(__name__)
 
 
 class TestUsers(TestAPI):
@@ -34,5 +38,23 @@ class TestUsers(TestAPI):
         assert s == 204
 
         # use invalid token
+        r, s, h = self.get('/api/v1.0/users', token_auth=token)
+        assert s == 401
+
+        # request a token with wrong expiration
+        r, s, h = self.post('/api/v1.0/tokens?expiration=toto',
+                            basic_auth='alkivi:alkivi123')
+        assert s == 400
+
+        # request short token
+        r, s, h = self.post('/api/v1.0/tokens?expiration=1',
+                            basic_auth='alkivi:alkivi123')
+        assert s == 200
+        token = r['token']
+
+        # sleep to expire token
+        sleep(2)
+
+        # use invalid token now
         r, s, h = self.get('/api/v1.0/users', token_auth=token)
         assert s == 401

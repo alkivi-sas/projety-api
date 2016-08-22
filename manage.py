@@ -138,7 +138,7 @@ def createuser(name):
     db.session.commit()
 
     print 'User {0} created with password {1}'.format(user.nickname, password)
-    print 'Here is a valid token : {0}'.format(user.generate_token())
+    print 'Here is a valid token : {0}'.format(user.generate_auth_token())
     db.session.add(user)
     db.session.commit()
 
