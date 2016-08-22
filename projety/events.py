@@ -28,8 +28,8 @@ def ping_minion(user_id, data):
 
         # Run the salt Job
         minion = data['minion']
-        job = Job(target=minion)
-        result = job.run()
+        job = Job()
+        result = job.run(minion, 'test.ping')
         push_result(result)
 
 

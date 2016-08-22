@@ -4,7 +4,7 @@ import logging
 from flask import abort, request, jsonify
 
 from ..exceptions import ValidationError
-from ..salt import wheel, client
+from ..salt import wheel, Job
 from ..auth import token_auth
 from . import api
 from .async import async
@@ -20,7 +20,8 @@ def _ping_one(minion):
         abort(404)
 
     logger.debug('going to ping {0}'.format(minion))
-    result = client.cmd(minion, 'test.ping')
+    job = Job()
+    result = job.run(minion, 'test.ping')
     return jsonify(result)
 
 
@@ -55,7 +56,8 @@ def _ping():
 
     real_target = ','.join(minions)
     logger.debug('Going to ping {0} as a list'.format(real_target))
-    result = client.cmd(real_target, 'test.ping', expr_form='list')
+    job = Job()
+    result = job.run(real_target, 'test.ping', expr_form='list')
     return jsonify(result)
 
 

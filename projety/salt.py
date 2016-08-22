@@ -40,13 +40,15 @@ def get_functions():
 class Job(object):
     """Represents a Salt Job."""
 
-    def __init__(self, target=None, cmd=None):
-        """Simple init."""
-        self.cmd = cmd
-        self.target = target
-
-    def run(self):
-        """Run a basic test.ping."""
-        minion = self.target
-        result = client.cmd(minion, 'test.ping')
+    def run(self, tgt, fun, arg=(), timeout=None, expr_form='glob', ret='',
+            jid='', kwarg=None, **kwargs):
+        """Run a basic task."""
+        result = client.cmd(tgt, fun,
+                            arg=arg,
+                            timeout=timeout,
+                            expr_form=expr_form,
+                            ret=ret,
+                            jid=jid,
+                            kwarg=kwarg,
+                            **kwargs)
         return result
