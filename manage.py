@@ -124,6 +124,18 @@ def createdb(drop_first=False):
 
 
 @manager.command
+def cleantoken(user=None):
+    """Clean the token database."""
+    for u in User.query.all():
+        if user and u.nickname != user:
+            continue
+        u.token = None
+        db.session.add(u)
+        db.session.commit()
+        print 'Token for {0} cleaned'.format(u.nickname)
+
+
+@manager.command
 def createuser(name):
     """Create a user and display its password and token."""
     test = User.query.filter_by(nickname=name).first()
