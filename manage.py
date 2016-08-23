@@ -141,7 +141,7 @@ def createuser(name):
     test = User.query.filter_by(nickname=name).first()
     if test:
         print 'User {0} already exist'.format(name)
-        print 'Here is a valid token : {0}'.format(test.token)
+        print 'Here is a valid token : {0}'.format(test.generate_auth_token())
         return
 
     password = generate_password()

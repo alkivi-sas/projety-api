@@ -22,6 +22,8 @@ def _ping_one(minion):
     logger.debug('going to ping {0}'.format(minion))
     job = Job()
     result = job.run(minion, 'test.ping')
+    if minion not in result:
+        result[minion] = False
     return jsonify(result)
 
 
@@ -61,7 +63,8 @@ def _ping():
     return jsonify(result)
 
 
-@api.route('/v1.0/ping/<minion>', methods=['POST'])
+@api.route('/v1.0/minions/<string:minion>/ping', methods=['POST'])
+@api.route('/v1.0/ping/<string:minion>', methods=['POST'])
 @token_auth.login_required
 def ping_one(minion):
     """
@@ -83,13 +86,7 @@ def ping_one(minion):
     responses:
       200:
         description: Returns the result
-        schema:
-          id: ping_one
-          required:
-            - minion
-          properties:
-            minion:
-              type: boolean
+        type: boolean
       404:
         description: The minion is not in the valid keys
     """

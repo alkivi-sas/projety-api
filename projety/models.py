@@ -1,5 +1,7 @@
 """Manage the models in our app."""
 
+import time
+
 from flask import abort, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import (TimedJSONWebSignatureSerializer
@@ -19,7 +21,6 @@ class User(db.Model):
     last_seen_at = db.Column(db.Integer, default=timestamp)
     nickname = db.Column(db.String(32), nullable=False, unique=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    token = db.Column(db.String(64), nullable=True, unique=True)
 
     @property
     def password(self):
@@ -29,7 +30,6 @@ class User(db.Model):
     @password.setter
     def password(self, password):
         self.password_hash = generate_password_hash(password)
-        self.token = None  # if user is changing passwords, also revoke token
 
     def verify_password(self, password):
         """For basic_auth check."""
@@ -38,8 +38,9 @@ class User(db.Model):
     def generate_auth_token(self, expiration=600):
         """Generate a token on the fly."""
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
-        self.token = s.dumps({'id': self.id})
-        return self.token
+        expiration_date = int(time.time()) + expiration
+        token = s.dumps({'id': self.id, 'expiration': expiration_date})
+        return token
 
     @staticmethod
     def verify_auth_token(token):
@@ -52,13 +53,7 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except SignatureExpired as e:
-            # If we have a token for the user, null it
-            user = User.query.get(e.payload['id'])
-            if user.token:
-                user.token = None
-                db.session.add(user)
-                db.session.commit()
+        except SignatureExpired:
             return None  # valid token, but expired
         except BadSignature:
             return None  # invalid token

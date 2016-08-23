@@ -3,9 +3,8 @@ import logging
 
 from flask import jsonify, g, request
 
-from .. import db
 from ..exceptions import ValidationError
-from ..auth import basic_auth, token_auth
+from ..auth import basic_auth
 from . import api
 
 logger = logging.getLogger(__name__)
@@ -48,30 +47,5 @@ def new_token():
     except ValueError:
         raise ValidationError('expiration parameter is not an integer')
 
-    if g.current_user.token is None:
-        g.current_user.generate_auth_token(expiration)
-        db.session.add(g.current_user)
-        db.session.commit()
-    return jsonify({'token': g.current_user.token})
-
-
-@api.route('/v1.0/tokens', methods=['DELETE'])
-@token_auth.login_required
-def revoke_token():
-    """
-    Revoke a user token.
-
-    This endpoint requires bearer authentication using a valid token.
-    ---
-    tags:
-      - tokens
-    security:
-      - token: []
-    responses:
-      204:
-        description: Token is deleted
-    """
-    g.current_user.token = None
-    db.session.add(g.current_user)
-    db.session.commit()
-    return '', 204
+    token = g.current_user.generate_auth_token(expiration)
+    return jsonify({'token': token})

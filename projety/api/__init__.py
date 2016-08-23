@@ -4,4 +4,4 @@ from flask import Blueprint
 
 api = Blueprint('api', __name__)
 
-from . import tokens, users, keys, tasks, ping, errors  # noqa
+from . import tokens, users, minions, tasks, ping, errors  # noqa

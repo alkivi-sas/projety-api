@@ -36,8 +36,9 @@ class TestAPI(object):
     def valid_minion(self):
         """Get a minion on the current salt master."""
         if not self._valid_minion:
-            r, s, h = self.get('/api/v1.0/keys', token_auth=self.valid_token)
-            self._valid_minion = r['minions'][0]
+            r, s, h = self.get('/api/v1.0/minions',
+                               token_auth=self.valid_token)
+            self._valid_minion = r[0]
         return self._valid_minion
 
     def get_headers(self, basic_auth=None, token_auth=None):

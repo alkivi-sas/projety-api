@@ -16,9 +16,11 @@ class TestPing(TestAPI):
         minion = self.valid_minion
 
         # we test both sync and async
-        for url in ['/api/v1.0/ping', '/api/v1.0/tasks/ping']:
+        for url in ['/api/v1.0/ping/{0}'.format(minion),
+                    '/api/v1.0/tasks/ping/{0}'.format(minion),
+                    '/api/v1.0/minions/{0}/ping'.format(minion)]:
             # ping one minion
-            r, s, h = self.post('{0}/{1}'.format(url, minion),
+            r, s, h = self.post(url,
                                 token_auth=token)
             assert s == 200
 

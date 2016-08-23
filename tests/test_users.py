@@ -33,14 +33,6 @@ class TestUsers(TestAPI):
         r, s, h = self.get('/api/v1.0/users', token_auth=token)
         assert s == 200
 
-        # revoke token
-        r, s, h = self.delete('/api/v1.0/tokens', token_auth=token)
-        assert s == 204
-
-        # use invalid token
-        r, s, h = self.get('/api/v1.0/users', token_auth=token)
-        assert s == 401
-
         # request a token with wrong expiration
         r, s, h = self.post('/api/v1.0/tokens?expiration=toto',
                             basic_auth='alkivi:alkivi123')
