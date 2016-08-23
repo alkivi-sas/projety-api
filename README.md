@@ -24,7 +24,19 @@ A broker for messages in necessary, default to redis (rabbitmq to come)
 
 If you want all the service using a regular user, you need to changes the user who runs the salt-master.
 Check https://docs.saltstack.com/en/latest/ref/configuration/nonroot.html for more info.
-We are assuming root is running the master in the following
+We are assuming saltuser is running the master in the following
+
+### In details
+
+Add the user in /etc/salt/master
+
+    cat /etc/salt/master | grep 'user:'
+    user: saltuser
+
+Then chown right files
+
+    chown -R saltuser /etc/salt /var/cache/salt /var/log/salt /var/run/salt
+
 
 ## Detailed installation
 
@@ -46,9 +58,6 @@ At every commit, we check for lint and test errors.
     ./git-hooks/create-hook-symlinks
 
 ## Running
-
-So far, due to salt implemention of wheel, we should start the program as root.
-Configure salt-master to run as a normal user to fix it
 
 There is two components. First the server to dispatch request
 
@@ -73,7 +82,7 @@ You need to create a new user
     python manage.py createuser awesome_user
 
 The password will then be displayed on the command line
-If you already have a user, you can do it again, it will display the token
+If you already have a user, you can do it again, it will display a valid token
 
 ### Basic : Authentification
 
@@ -94,17 +103,11 @@ Use the token then to get user
         -H "Authorization: Bearer ${TOKEN}" \
         ${URL}/api/v1.0/users
 
-### List availables keys
+### List availables minions
 
     curl -i -X GET \
         -H "Authorization: Bearer ${TOKEN}" \
-        ${URL}/api/v1.0/keys
-
-### List availables tasks
-
-    curl -i -X GET \
-        -H "Authorization: Bearer ${TOKEN}" \
-        ${URL}/api/v1.0/tasks
+        ${URL}/api/v1.0/minions
 
 ### Ping machines (salt ping)
 
@@ -112,7 +115,7 @@ Use the token then to get user
 
     curl -i -X POST \
         -H "Authorization: Bearer ${TOKEN}" \
-        ${URL}/api/v1.0/ping/<minion_from_keys>
+        ${URL}/api/v1.0/minions/<minion_from_keys>/ping
 
 #### Ping a list minion synchronously
 
