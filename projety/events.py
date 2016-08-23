@@ -7,7 +7,7 @@ from flask import g
 from . import socketio, celery
 from .models import User
 from .auth import verify_token
-from .salt import Job
+from .salt import ping_one
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +28,8 @@ def ping_minion(user_id, data):
 
         # Run the salt Job
         minion = data['minion']
-        job = Job()
-        result = job.run(minion, 'test.ping')
-        push_result({minion: result})
+        result = ping_one(minion)
+        push_result(result)
 
 
 @socketio.on('ping_minion')

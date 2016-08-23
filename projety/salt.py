@@ -7,6 +7,7 @@ import salt.config
 import salt.wheel
 import salt.client
 
+from flask import request
 from .exceptions import ValidationError, SaltError
 
 # Global salt variable
@@ -19,6 +20,50 @@ logger = logging.getLogger(__name__)
 # Our app cache
 minions = {}
 functions = {}
+
+
+def ping_one(minion):
+    """Return a simple test.ping."""
+    logger.debug('going to ping {0}'.format(minion))
+    job = Job()
+    result = job.run(minion, 'test.ping')
+    if not result:
+        result = False
+    return {minion: result}
+
+
+def ping():
+    """Return the simple test.ping but can be on a list."""
+    data = request.json
+    if not data:
+        raise ValidationError('no json data in request')
+
+    if 'target' not in data:
+        raise ValidationError('no target in parameters')
+    targets = data['target']
+
+    to_test = None
+    if isinstance(targets, list):
+        to_test = targets
+    elif isinstance(targets, (str, unicode)):
+        to_test = [targets]
+    else:
+        raise ValidationError('target parameter is not an array not a scalar')
+
+    keys = get_minions()
+    minions = []
+    for m in to_test:
+        if m in keys:
+            minions.append(m)
+
+    if not minions:
+        raise ValidationError('minions list is not valid')
+
+    real_target = ','.join(minions)
+    logger.debug('Going to ping {0} as a list'.format(real_target))
+    job = Job(only_one=False)
+    result = job.run(real_target, 'test.ping', expr_form='list')
+    return result
 
 
 def get_minions(type='minions', use_cache=True):
@@ -69,7 +114,13 @@ class Job(object):
 
     def run(self, tgt, fun, arg=(), timeout=None, expr_form='glob', ret='',
             jid='', kwarg=None, **kwargs):
-        """Run a basic task."""
+        """
+        Run a basic task.
+
+        In only_one mode, we perform some checks :
+        - minion should be in the list, raise ValidationError if not
+        - result should have a minion entrie, raise SaltError if not
+        """
         # Check if minion is valid
         if self.only_one:
             if tgt not in get_minions():

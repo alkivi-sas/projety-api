@@ -20,17 +20,20 @@ class TestPing(TestAPI):
                     '/api/v1.0/tasks/ping/{0}'.format(minion),
                     '/api/v1.0/minions/{0}/ping'.format(minion)]:
             # ping one minion
-            r, s, h = self.post(url,
-                                token_auth=token)
+            r, s, h = self.post(url, token_auth=token)
             assert s == 200
 
             # check that we have the minion in keys
             assert minion in r
 
-            # ping invalid minion
-            r, s, h = self.post('{0}/{1}'.format(url, 'minion_invalid'),
-                                token_auth=token)
-            assert s == 404
+        # now invalid minion
+        minion = 'invalid_minion_dzakdazdaz'
+        for url in ['/api/v1.0/ping/{0}'.format(minion),
+                    '/api/v1.0/tasks/ping/{0}'.format(minion),
+                    '/api/v1.0/minions/{0}/ping'.format(minion)]:
+            # ping one minion
+            r, s, h = self.post(url, token_auth=token)
+            assert s == 400
 
     def test_ping(self):
         """Test several pings."""
@@ -66,9 +69,9 @@ class TestPing(TestAPI):
             # ping using scalar of invalid minion
             r, s, h = self.post(url, data={'target': 'minion_invalid'},
                                 token_auth=token)
-            assert s == 404
+            assert s == 400
 
             # ping using list of invalid minion
             r, s, h = self.post(url, data={'target': ['minion_invalid']},
                                 token_auth=token)
-            assert s == 404
+            assert s == 400
