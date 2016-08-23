@@ -30,7 +30,7 @@ def ping_minion(user_id, data):
         minion = data['minion']
         job = Job()
         result = job.run(minion, 'test.ping')
-        push_result(result)
+        push_result({minion: result})
 
 
 @socketio.on('ping_minion')

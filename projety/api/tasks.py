@@ -1,11 +1,8 @@
 """Handles /keys endpoints."""
 import logging
 
-from flask import jsonify
 from celery import states
 
-from ..exceptions import ValidationError
-from ..salt import get_functions, Job
 from ..auth import token_auth
 from ..utils import url_for
 from . import api
@@ -13,60 +10,6 @@ from .async import run_flask_request
 
 
 logger = logging.getLogger(__name__)
-
-
-@api.route('/v1.0/tasks', methods=['GET'])
-@token_auth.login_required
-def get_salt_functions():
-    """
-    Return the list of all tasks we can do.
-
-    Return all the tasks we can do.
-    ---
-    tags:
-      - tasks
-    security:
-      - token: []
-    responses:
-      200:
-        description: Returns a lists of functions
-        schema:
-          type: array
-          items:
-            type: string
-            description: function
-    """
-    return jsonify(get_functions())
-
-
-@api.route('/v1.0/tasks/<string:task>', methods=['GET'])
-@token_auth.login_required
-def get_doc_function(task):
-    """
-    Return the documentation of a task.
-
-    Return the documentation as present in salt.
-    ---
-    tags:
-      - tasks
-    security:
-      - token: []
-    parameters:
-      - name: task
-        in: path
-        description: task to get doc for
-        required: true
-        type: string
-    responses:
-      200:
-        description: Returns a lists of functions
-    """
-    if task not in get_functions():
-        raise ValidationError('Task {0} is not valid'.format(task))
-
-    job = Job()
-    result = job.run('*', 'sys.doc', [task])
-    return jsonify(result)
 
 
 @api.route('/v1.0/tasks/status/<string:id>', methods=['GET'])

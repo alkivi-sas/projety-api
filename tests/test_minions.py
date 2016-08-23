@@ -20,17 +20,34 @@ class TestMinions(TestAPI):
         token = self.valid_token
         minion = self.valid_minion
 
+        # Normal result
         r, s, h = self.get('/api/v1.0/minions/{0}/tasks'.format(minion),
                            token_auth=token)
         assert s == 200
         assert isinstance(r, list)
+
+        # Wrong minion result
+        r, s, h = self.get('/api/v1.0/minions/{0}/tasks'.format('fzafazz'),
+                           token_auth=token)
+        assert s == 400
 
     def test_get_task_description(self):
         """Test the structure of return of the salt minions."""
         token = self.valid_token
         minion = self.valid_minion
 
+        # Normal result
         r, s, h = self.get('/api/v1.0/minions/{0}/tasks/{1}'.format(minion,
                            'test.ping'), token_auth=token)
         assert s == 200
         assert 'documentation' in r
+
+        # Wrong minion result
+        r, s, h = self.get('/api/v1.0/minions/{0}/tasks/{1}'.format('fzafazz',
+                           'test.ping'), token_auth=token)
+        assert s == 400
+
+        # Wrong task result
+        r, s, h = self.get('/api/v1.0/minions/{0}/tasks/{1}'.format(minion,
+                           'dzadazdazda.ping'), token_auth=token)
+        assert s == 400

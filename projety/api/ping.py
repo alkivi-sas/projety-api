@@ -22,9 +22,9 @@ def _ping_one(minion):
     logger.debug('going to ping {0}'.format(minion))
     job = Job()
     result = job.run(minion, 'test.ping')
-    if minion not in result:
-        result[minion] = False
-    return jsonify(result)
+    if not result:
+        result = False
+    return jsonify({minion: result})
 
 
 def _ping():
@@ -58,7 +58,7 @@ def _ping():
 
     real_target = ','.join(minions)
     logger.debug('Going to ping {0} as a list'.format(real_target))
-    job = Job()
+    job = Job(only_one=False)
     result = job.run(real_target, 'test.ping', expr_form='list')
     return jsonify(result)
 
@@ -87,8 +87,8 @@ def ping_one(minion):
       200:
         description: Returns the result
         type: boolean
-      404:
-        description: The minion is not in the valid keys
+      400:
+        description: When minion is not found
     """
     return _ping_one(minion)
 
@@ -132,8 +132,8 @@ def ping():
               type: boolean
             minion2:
               type: boolean
-      404:
-        description: All the minions are not in the valid keys
+      400:
+        description: When all minions are not found
     """
     return _ping()
 
