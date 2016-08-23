@@ -57,6 +57,8 @@ class User(db.Model):
             user = User.query.get(e.payload['id'])
             if user.token:
                 user.token = None
+                db.session.add(user)
+                db.session.commit()
             return None  # valid token, but expired
         except BadSignature:
             return None  # invalid token
