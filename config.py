@@ -17,6 +17,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CELERY_CONFIG = {}
     SOCKETIO_MESSAGE_QUEUE = os.environ.get('CELERY_BROKER_URL', 'redis://')
+    WEBSOCKET_MESSAGE_QUEUE = os.environ.get('CELERY_BROKER_URL', 'redis://')
     SWAGGER = {'specs':
                [
                    {

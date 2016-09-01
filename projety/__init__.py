@@ -17,10 +17,13 @@ from celery import Celery
 
 from config import config
 
+from flask_websockify import WebSockifyProxy
+
 # Flask extensions
 db = SQLAlchemy()
 cors = CORS()
 socketio = SocketIO()
+wsproxy = WebSockifyProxy()
 celery = Celery(__name__,
                 broker=os.environ.get('CELERY_BROKER_URL', 'redis://'),
                 backend=os.environ.get('CELERY_BROKER_URL', 'redis://'))
@@ -63,6 +66,7 @@ def create_app(config_name=None, main=True):
     db.init_app(app)
     cors.init_app(app)
     swagger.init_app(app)
+    wsproxy.init_app(app)
     if main:
         # Initialize socketio server and attach it to the message queue, so
         # that everything works even when there are multiple servers or

@@ -8,6 +8,7 @@ from ..salt import (get_minions as _get_minions,
                     get_minion_functions as _get_minion_functions,
                     Job)
 from ..auth import token_auth
+from ..utils import get_open_port
 from . import api
 
 logger = logging.getLogger(__name__)
@@ -119,3 +120,38 @@ def get_minion_function(minion, task):
     if task not in result:
         raise SaltError('task {0} not in salt return'.format(task))
     return jsonify({'documentation': result[task]})
+
+
+@api.route('/v1.0/minions/<string:minion>/remote',
+           methods=['GET'])
+@token_auth.login_required
+def get_remote(minion):
+    """
+    Return the documentation of a task.
+
+    Return the salt documentation of the task.
+    ---
+    tags:
+      - minions
+    security:
+      - token: []
+    parameters:
+      - name: minion
+        in: path
+        description: target
+        required: true
+        type: string
+    responses:
+      200:
+        description: TODO
+    """
+    port = get_open_port()
+
+    job = Job()
+    result = job.run(minion, 'projety.create_ssh_connection', [port])
+
+    if not result:
+        raise SaltError('Unable to create secure connection to' +
+                        '{0}'.format(minion))
+
+    return jsonify({'port': port, 'pid': result})

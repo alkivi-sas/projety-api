@@ -1,5 +1,6 @@
 """Some helpers functions non related to any models."""
 
+import socket
 import logging
 import time
 
@@ -25,3 +26,13 @@ def url_for(*args, **kwargs):
         with current_app.test_request_context():
             return _url_for(*args, **kwargs)
     return _url_for(*args, **kwargs)
+
+
+def get_open_port():
+    """Return an available port on the master."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('', 0))
+    s.listen(1)
+    port = s.getsockname()[1]
+    s.close()
+    return port

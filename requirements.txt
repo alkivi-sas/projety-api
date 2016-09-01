@@ -22,3 +22,4 @@ redis
 salt
 swagger_spec_validator
 uWSGI
+websockify

@@ -136,23 +136,23 @@ def cleantoken(user=None):
 
 
 @manager.command
-def createuser(name):
+def createuser(name, expiration=3600):
     """Create a user and display its password and token."""
-    test = User.query.filter_by(nickname=name).first()
-    if test:
+    user = User.query.filter_by(nickname=name).first()
+    if user:
         print 'User {0} already exist'.format(name)
-        print 'Here is a valid token : {0}'.format(test.generate_auth_token())
-        return
+    else:
+        password = generate_password()
+        user = User(nickname=name, password=password)
+        db.session.add(user)
+        db.session.commit()
 
-    password = generate_password()
-    user = User(nickname=name, password=password)
-    db.session.add(user)
-    db.session.commit()
+        print 'User {0} created with password {1}'.format(user.nickname,
+                                                          password)
 
-    print 'User {0} created with password {1}'.format(user.nickname, password)
-    print 'Here is a valid token : {0}'.format(user.generate_auth_token())
-    db.session.add(user)
-    db.session.commit()
+    token = user.generate_auth_token(expiration=expiration)
+    print 'Here is a valid token : {0}'.format(token)
+    return
 
 
 @manager.command
