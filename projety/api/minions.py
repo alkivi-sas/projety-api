@@ -155,6 +155,7 @@ def get_remote(minion):
     token = wsproxy.create_token(minion, expiration=3600)
     return jsonify({'token': token.uuid})
 
+
 @api.before_app_first_request
 def before_first_request():
     """Start a background thread to clean old tokens."""

@@ -42,3 +42,6 @@ class TestSocketIO(TestAPI):
         assert len(recvd) == 1
         assert recvd[0]['args'][0] == {minion: True}
         assert recvd[0]['name'] == 'job_result'
+
+        recvd = client2.get_received()
+        assert len(recvd) == 0
