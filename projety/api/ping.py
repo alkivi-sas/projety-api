@@ -19,7 +19,7 @@ def ping_one(minion):
     Perform synchronous test.ping on a minion.
 
     Before performing the task, ensure that the minion is present
-    in keys. Return 400 if not
+    in keys. Return 400 if not.
     ---
     tags:
       - ping

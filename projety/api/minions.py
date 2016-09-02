@@ -1,14 +1,17 @@
 """Handles /keys endpoints."""
 import logging
+import threading
+import time
 
-from flask import jsonify
+from flask import jsonify, current_app
+
 
 from ..exceptions import SaltError, ValidationError
 from ..salt import (get_minions as _get_minions,
                     get_minion_functions as _get_minion_functions,
                     Job)
 from ..auth import token_auth
-from ..utils import get_open_port
+from .. import wsproxy
 from . import api
 
 logger = logging.getLogger(__name__)
@@ -45,7 +48,6 @@ def get_minion_functions(minion):
     """
     Return the list of all tasks we can do.
 
-    Return all the tasks we can do.
     ---
     tags:
       - minions
@@ -80,7 +82,6 @@ def get_minion_function(minion, task):
     """
     Return the documentation of a task.
 
-    Return the salt documentation of the task.
     ---
     tags:
       - minions
@@ -127,9 +128,8 @@ def get_minion_function(minion, task):
 @token_auth.login_required
 def get_remote(minion):
     """
-    Return the documentation of a task.
+    Return a valid token in order to connect to a minion.
 
-    Return the salt documentation of the task.
     ---
     tags:
       - minions
@@ -143,15 +143,32 @@ def get_remote(minion):
         type: string
     responses:
       200:
-        description: TODO
+        description: Returns a valid token
+        schema:
+          id: remote
+          required:
+            - token
+          properties:
+            token:
+              type: string
     """
-    port = get_open_port()
+    token = wsproxy.create_token(minion, expiration=3600)
+    return jsonify({'token': token.uuid})
 
-    job = Job()
-    result = job.run(minion, 'projety.create_ssh_connection', [port])
+@api.before_app_first_request
+def before_first_request():
+    """Start a background thread to clean old tokens."""
+    def clean_old_tokens(app):
+        with app.app_context():
+            while True:
+                websockify = app.extensions['websockify']
+                token_manager = websockify.server.token_manager
+                token_manager.clean_old_tokens()
+                time.sleep(5)
 
-    if not result:
-        raise SaltError('Unable to create secure connection to' +
-                        '{0}'.format(minion))
-
-    return jsonify({'port': port, 'pid': result})
+    if 'websockify' in current_app.extensions:
+        if not current_app.config['TESTING']:
+            thread = threading.Thread(
+                target=clean_old_tokens,
+                args=(current_app._get_current_object(),))
+            thread.start()

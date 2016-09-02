@@ -14,7 +14,7 @@ from hashlib import sha1
 logger = logging.getLogger(__name__)
 
 
-class Socket(object):
+class ProxySocket(object):
     """An Websockify proxy socket."""
 
     upgrade_protocols = ['websocket']
@@ -27,9 +27,8 @@ class Socket(object):
 
         pass
 
-    def __init__(self, server, sid, port):
+    def __init__(self, server, sid):
         """Simple init."""
-        self.proxy_port = port
         self.server = server
         self.sid = sid
 
@@ -41,9 +40,13 @@ class Socket(object):
         # Not sure we need this
         self.base64 = False
 
-    def do_proxy(self, environ, start_response):
-        """Start a thread to proxy request to a specific port."""
-        logger.warning('do_proxy')
+        # Init to none
+        self.proxy_port = None
+        self.proxy_socket = None
+
+    def setup_proxy(self, port):
+        """Setup proxy socket."""
+        self.proxy_port = port
 
         # Create proxy_socket and connect to it
         host = '127.0.0.1'
@@ -63,6 +66,11 @@ class Socket(object):
 
         self.proxy_socket.setsockopt(_socket.SOL_SOCKET,
                                      _socket.SO_KEEPALIVE, 1)
+        return True
+
+    def do_proxy(self, environ, start_response):
+        """Start a thread to proxy request to a specific port."""
+        logger.warning('do_proxy')
 
         # Select the right websocket class
         if self.server.async['websocket'] is None or \

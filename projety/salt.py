@@ -108,9 +108,10 @@ def get_minion_functions(minion):
 class Job(object):
     """Represents a Salt Job."""
 
-    def __init__(self, only_one=True):
+    def __init__(self, only_one=True, async=False):
         """Keep trace of only_one to automatically raise error."""
         self.only_one = only_one
+        self.async = async
 
     def run(self, tgt, fun, arg=(), timeout=None, expr_form='glob', ret='',
             jid='', kwarg=None, **kwargs):
@@ -128,14 +129,24 @@ class Job(object):
                 logger.warning(msg)
                 raise ValidationError(msg)
 
-        result = client.cmd(tgt, fun,
-                            arg=arg,
-                            timeout=timeout,
-                            expr_form=expr_form,
-                            ret=ret,
-                            jid=jid,
-                            kwarg=kwarg,
-                            **kwargs)
+        # We might want to run async request
+        function = None
+        if self.async:
+            function = client.cmd_async
+        else:
+            function = client.cmd
+
+        result = function(tgt, fun,
+                          arg=arg,
+                          timeout=timeout,
+                          expr_form=expr_form,
+                          ret=ret,
+                          jid=jid,
+                          kwarg=kwarg,
+                          **kwargs)
+
+        if self.async:
+            return result
 
         # If only one, perform additional check
         if self.only_one:

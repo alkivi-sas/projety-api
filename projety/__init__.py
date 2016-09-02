@@ -17,13 +17,13 @@ from celery import Celery
 
 from config import config
 
-from flask_websockify import WebSockifyProxy
+from wsproxy import FlaskWsProxy
 
 # Flask extensions
 db = SQLAlchemy()
 cors = CORS()
 socketio = SocketIO()
-wsproxy = WebSockifyProxy()
+wsproxy = FlaskWsProxy()
 celery = Celery(__name__,
                 broker=os.environ.get('CELERY_BROKER_URL', 'redis://'),
                 backend=os.environ.get('CELERY_BROKER_URL', 'redis://'))
@@ -66,7 +66,6 @@ def create_app(config_name=None, main=True):
     db.init_app(app)
     cors.init_app(app)
     swagger.init_app(app)
-    wsproxy.init_app(app)
     if main:
         # Initialize socketio server and attach it to the message queue, so
         # that everything works even when there are multiple servers or
@@ -74,6 +73,9 @@ def create_app(config_name=None, main=True):
         # Socket.IO
         socketio.init_app(app,
                           message_queue=app.config['SOCKETIO_MESSAGE_QUEUE'])
+
+        # Our wsproxy is only needed for the main app
+        wsproxy.init_app(app)
     else:
         # Initialize socketio to emit events through through the message queue
         # Note that since Celery does not use eventlet, we have to be explicit

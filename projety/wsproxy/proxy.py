@@ -3,12 +3,15 @@ import importlib
 import logging
 import uuid
 
-from . import socket
+from six.moves import urllib
+
+from .socket import ProxySocket
+from .tokens import TokenManager
 
 logger = logging.getLogger(__name__)
 
 
-class WebSockifyServer(object):
+class WsProxy(object):
     """
     Websockify proxy.
 
@@ -44,6 +47,7 @@ class WebSockifyServer(object):
         self.cors_credentials = cors_credentials
         self.sockets = {}
         self.environ = {}
+        self.token_manager = TokenManager()
 
         # Default mode for async
         if async_mode is None:
@@ -65,6 +69,10 @@ class WebSockifyServer(object):
             raise ValueError('Invalid async_mode specified')
 
         logger.info('Server initialized for %s.', self.async_mode)
+
+    def create_token(self, minion, expiration=3600):
+        """Create a token to use in no_vnc."""
+        return self.token_manager.create_token(minion, expiration)
 
     def _test_websocket(self, environ):
         """Test environ for websocket upgrade."""
@@ -98,23 +106,26 @@ class WebSockifyServer(object):
         This function returns the HTTP response body to deliver to the client
         as a byte sequence.
         """
+        logging.warning(environ)
+
         # First upgrade a connection to websocket
         if not self._test_websocket(environ):
             r = self._bad_request('Not a websocket request')
             return self._respond(environ, start_response, r)
 
-        port = self._get_websockify_port(environ)
-        if not port:
-            r = self._bad_request('Not a valid port')
-            return self._respond(environ, start_response, r)
-
-        # Auth stuff
-        self.validate_connection()
+        # Create sid for new connection
+        sid = self._generate_id()
 
         # Generate new socket
-        sid = self._generate_id()
-        s = socket.Socket(self, sid, port)
+        s = ProxySocket(self, sid)
         self.sockets[sid] = s
+
+        # Auth stuff
+        logging.warning('testing token')
+        if not self.validate_connection(environ, sid):
+            r = self._bad_request('Unable to validate connection')
+            return self._respond(environ, start_response, r)
+        logging.warning('token is valid !')
 
         # Handle handshake
         if not s.do_websocket_handshake(environ, start_response):
@@ -149,10 +160,29 @@ class WebSockifyServer(object):
         """Generate a unique session id."""
         return uuid.uuid4().hex
 
-    def validate_connection(self):
-        """Bind authentification."""
-        # TODO Authentification and plugin auth will go here
-        pass
+    def validate_connection(self, environ, sid):
+        """Check that the token is valid."""
+        # Parse url
+        query = urllib.parse.parse_qs(environ.get('QUERY_STRING', ''))
+        if 'token' not in query:
+            return False
+
+        # Validate token
+        token = query['token'][0]
+        logging.warning('token is {0}'.format(token))
+        data = self.token_manager.get_token(token)
+        logging.warning('data')
+        logging.warning(data)
+        if not data:
+            return False
+
+        # Push port into socket
+        socket = self.sockets[sid]
+        if not socket:
+            return False
+        socket.setup_proxy(data.port)
+
+        return True
 
     def _bad_request(self, message):
         """Generate a bad request HTTP error response."""

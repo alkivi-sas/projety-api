@@ -1,15 +1,15 @@
 """Flask extension for handling our proxy request."""
 import logging
 
-from .server import WebSockifyServer
-from .middleware import WebSockifyProxyMiddleware
+from .proxy import WsProxy
+from .middleware import WsProxyMiddleware
 
 logger = logging.getLogger(__name__)
 
 
-class WebSockifyProxy(object):
+class FlaskWsProxy(object):
     """
-    Create a Flask-WebSockify server.
+    Create a FlaskWs proxy.
 
     :param app: The flask application instance. If the application instance
                 isn't known at the time this class is instantiated, then call
@@ -45,12 +45,16 @@ class WebSockifyProxy(object):
         if resource.startswith('/'):
             resource = resource[1:]
 
-        self.server = WebSockifyServer(logger=logger)
+        self.server = WsProxy(logger=logger)
         if app is not None:
-            # here we attach the WebSockify middlware to the WebSockifyProxy
+            # here we attach the WsProxy middlware to the FlaskWsProxy
             # object so it can be referenced later if debug middleware needs
             # to be inserted
-            self.websockify_mw = WebSockifyProxyMiddleware(
+            self.websockify_mw = WsProxyMiddleware(
                 self.server, app,
                 websockify_path=resource)
             app.wsgi_app = self.websockify_mw
+
+    def create_token(self, minion, expiration=3600):
+        """Create a token to use in no_vnc."""
+        return self.server.create_token(minion, expiration)
