@@ -70,8 +70,6 @@ class ProxySocket(object):
 
     def do_proxy(self, environ, start_response):
         """Start a thread to proxy request to a specific port."""
-        logger.warning('do_proxy')
-
         # Select the right websocket class
         if self.server.async['websocket'] is None or \
                 self.server.async['websocket_class'] is None:
@@ -86,8 +84,6 @@ class ProxySocket(object):
 
     def do_websocket_handshake(self, environ, start_response):
         """Perform the websocket handshake."""
-        logger.warning('do_websocket_handshake')
-
         if 'HTTP_SEC_WEBSOCKET_PROTOCOL' in environ:
             protocols = environ['HTTP_SEC_WEBSOCKET_PROTOCOL'].split(',')
         else:

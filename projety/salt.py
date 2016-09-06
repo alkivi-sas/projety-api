@@ -6,14 +6,13 @@ import logging
 import salt.config
 import salt.wheel
 import salt.client
+import salt.runner
 
 from flask import request
-from .exceptions import ValidationError, SaltError
+from .exceptions import ValidationError, SaltError, ACLError
 
 # Global salt variable
 opts = salt.config.master_config('/etc/salt/master')
-wheel = salt.wheel.WheelClient(opts)
-client = salt.client.LocalClient(c_path='/etc/salt/master')
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +75,9 @@ def get_minions(type='minions', use_cache=True):
     if use_cache and type in minions:
         return minions[type]
 
+    wheel = salt.wheel.WheelClient(opts)
     keys = wheel.cmd('key.list_all')
     if type not in keys:
-        logger.warning('Unable to get {0} in keys'.format(type))
         raise SaltError('No key {0} in key.list_all'.format(type))
     minions[type] = keys[type]
     return minions[type]
@@ -105,6 +104,16 @@ def get_minion_functions(minion):
     return result
 
 
+def is_task_allowed(task):
+    """
+    Check weither if the current user is allowed to run a task.
+
+    Will be extended later.
+    """
+    if task not in ['test.ping']:
+        raise ACLError('You are not allowed to perform {0}'.format(task))
+
+
 class Job(object):
     """Represents a Salt Job."""
 
@@ -126,11 +135,11 @@ class Job(object):
         if self.only_one:
             if tgt not in get_minions():
                 msg = 'minion {0} is not valid'.format(tgt)
-                logger.warning(msg)
                 raise ValidationError(msg)
 
         # We might want to run async request
         function = None
+        client = salt.client.get_local_client()
         if self.async:
             function = client.cmd_async
         else:
@@ -152,7 +161,6 @@ class Job(object):
         if self.only_one:
             if tgt not in result:
                 msg = 'minion {0} not in salt return'.format(tgt)
-                logger.warning(msg)
                 raise SaltError(msg)
             else:
                 return result[tgt]

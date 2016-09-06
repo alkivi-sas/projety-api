@@ -34,7 +34,13 @@ def ping_one(minion):
     responses:
       200:
         description: Returns the result
-        type: boolean
+        schema:
+          id: ping_one
+          required:
+            - minion1
+          properties:
+            minion1:
+              type: boolean
       400:
         description: When minion is not found
     """
@@ -116,7 +122,7 @@ def async_ping_one(minion):
       200:
         description: When the task is finished
         schema:
-          $ref: '#/definitions/api_ping_one_post_ping_one'
+          $ref: '#/definitions/api_ping_post_ping'
       400:
         description: The minion is not in the valid keys
     """
