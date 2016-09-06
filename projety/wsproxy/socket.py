@@ -145,8 +145,10 @@ class ProxySocket(object):
 
     def close(self, wait=True, abort=False):
         """Close the socket connection."""
+        if self.proxy_socket:
+            self.proxy_socket.shutdown(_socket.SHUT_RDWR)
+            self.proxy_socket.close()
         self.closed = True
-        self.proxy_socket.close()
 
     def make_websocket(self, environ, start_response):
         """Todo correcly."""
@@ -161,10 +163,6 @@ class ProxySocket(object):
 
     def _websocket_handler(self, ws):
         """Handler for websocket transport."""
-        logger.warning('_websocket_handler')
-        logger.warning(ws.__class__)
-        logger.warning(ws.socket)
-
         cqueue = []
         c_pend = 0
         tqueue = []

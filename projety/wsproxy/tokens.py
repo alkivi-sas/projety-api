@@ -28,7 +28,9 @@ class Token(object):
         self.expiration = expiration
 
         job = Job()
-        result = job.run(minion, 'projety.create_ssh_connection', [self.port])
+        result = job.run(minion,
+                         'remote_control.create_ssh_connection',
+                         [self.port])
 
         if not result:
             raise SaltError('Unable to create secure connection to' +
@@ -58,7 +60,7 @@ class Token(object):
     def _close_connection(self):
         """Terminate a connection."""
         job = Job(async=True)
-        job.run(self.minion, 'ps.kill_pid', [self.pid])
+        job.run(self.minion, 'remote_control.close_ssh_connection', [self.pid])
 
     def refresh(self):
         """Refresh last_seen property."""
