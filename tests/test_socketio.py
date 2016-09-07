@@ -27,21 +27,48 @@ class TestSocketIO(TestAPI):
         assert minion in r
 
         # then start socketio
-        client1 = socketio.test_client(self.app)
-        client2 = socketio.test_client(self.app)
+        client = socketio.test_client(self.app)
+        client_bis = socketio.test_client(self.app)
 
         # clear old socket.io notifications
-        client1.get_received()
-        client2.get_received()
+        client.get_received()
+        client_bis.get_received()
 
         # ping a minion using socket.io
-        client1.emit('ping_minion', {'minion': minion}, token)
+        client.emit('ping_minion', {'minion': minion}, token)
 
         # Check that we get to good value
-        recvd = client1.get_received()
+        recvd = client.get_received()
         assert len(recvd) == 1
         assert recvd[0]['args'][0] == {minion: True}
         assert recvd[0]['name'] == 'job_result'
 
-        recvd = client2.get_received()
+        # Check that client_bis dont get shit
+        recvd = client_bis.get_received()
+        assert len(recvd) == 0
+
+        # Auth using socket.io
+        client.emit('login', self.valid_user, self.valid_password)
+
+        # Check that we get to good value
+        recvd = client.get_received()
+        assert len(recvd) == 1
+        assert recvd[0]['name'] == 'login'
+        assert 'token' in recvd[0]['args'][0]
+
+        # Check that client_bis dont get shit
+        recvd = client_bis.get_received()
+        assert len(recvd) == 0
+
+        # Wrong auth using socket.io
+        client.emit('login', self.valid_user, 'toto')
+
+        # Check that we get to good value
+        recvd = client.get_received()
+        assert len(recvd) == 1
+        assert recvd[0]['name'] == 'login_error'
+        assert 'error' in recvd[0]['args'][0]
+
+        # Check that client_bis dont get shit
+        recvd = client_bis.get_received()
         assert len(recvd) == 0

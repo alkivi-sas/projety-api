@@ -21,6 +21,8 @@ class TestAPI(object):
         """Fixture for variable common in tests."""
         self._valid_token = None
         self._valid_minion = None
+        self.valid_user = 'alkivi'
+        self.valid_password = 'alkivi123'
 
     @property
     def valid_token(self):

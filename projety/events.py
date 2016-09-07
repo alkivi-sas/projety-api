@@ -6,7 +6,7 @@ from flask import g, request
 
 from . import socketio, celery
 from .models import User
-from .auth import verify_token
+from .auth import verify_token, verify_password
 from .salt import ping_one
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,17 @@ def ping_minion(user_id, data, sid):
         minion = data['minion']
         result = ping_one(minion)
         push_result(result, sid)
+
+
+@socketio.on('login')
+def on_login(nickname, password, expiration=600):
+    """Callback from socket.io client on webapp."""
+    if verify_password(nickname, password):
+        token = g.current_user.generate_auth_token(expiration)
+        socketio.emit('login', {'token': token}, room=request.sid)
+    else:
+        socketio.emit('login_error', {'error': 'wrong login'},
+                      room=request.sid)
 
 
 @socketio.on('ping_minion')
