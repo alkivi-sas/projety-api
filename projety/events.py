@@ -8,6 +8,7 @@ from . import socketio, celery
 from .models import User
 from .auth import verify_token, verify_password
 from .salt import ping_one
+from .exceptions import SaltError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,18 @@ def ping_minion(user_id, data, sid):
 
         # Run the salt Job
         minion = data['minion']
-        result = ping_one(minion)
+        try:
+            result = ping_one(minion)
+        except SaltError as e:
+            result = {
+                'error': 'salt wrong return',
+                'message': e.args[0],
+            }
+        except ValidationError as e:
+            result = {
+                'error': 'bad request',
+                'message': e.args[0],
+            }
         push_result(result, sid)
 
 
@@ -41,6 +53,14 @@ def on_login(nickname, password, expiration=600):
     else:
         socketio.emit('login_error', {'error': 'wrong login'},
                       room=request.sid)
+
+
+@socketio.on('sid')
+def on_get_sid(token):
+    """Callback to get sid."""
+    verify_token(token)
+    if g.current_user:
+        socketio.emit('sid', {'sid': request.sid}, room=request.sid)
 
 
 @socketio.on('ping_minion')

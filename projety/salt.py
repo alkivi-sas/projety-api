@@ -6,13 +6,15 @@ import logging
 import salt.config
 import salt.wheel
 import salt.client
+import salt.runner
 
 from flask import request
-from .exceptions import ValidationError, SaltError
+from .exceptions import ValidationError, SaltError, ACLError
 
 # Global salt variable
 opts = salt.config.master_config('/etc/salt/master')
 wheel = salt.wheel.WheelClient(opts)
+runner = salt.runner.RunnerClient(opts)
 client = salt.client.LocalClient(c_path='/etc/salt/master')
 
 logger = logging.getLogger(__name__)
@@ -103,6 +105,16 @@ def get_minion_functions(minion):
     functions[minion] = result
 
     return result
+
+
+def is_task_allowed(task):
+    """
+    Check weither if the current user is allowed to run a task.
+
+    Will be extended later.
+    """
+    if task not in ['test.ping']:
+        raise ACLError('You are not allowed to perform {0}'.format(task))
 
 
 class Job(object):

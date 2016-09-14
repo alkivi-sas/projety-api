@@ -11,3 +11,9 @@ class SaltError(ValueError):
     """Exception for wrong salt return."""
 
     pass
+
+
+class ACLError(ValueError):
+    """Exception when not allowed."""
+
+    pass
