@@ -109,7 +109,7 @@ class CeleryWorker(Command):
     def run(self, argv):
         """Execute celery."""
         ret = subprocess.call(
-            ['celery', 'worker', '-A', 'projety.celery'] + argv)
+            ['celery', 'worker', '-c', '1', '-A', 'projety.celery'] + argv)
         sys.exit(ret)
 
 manager.add_command("celery", CeleryWorker())
