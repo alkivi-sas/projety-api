@@ -11,9 +11,13 @@ from flask import g, request
 from werkzeug.exceptions import InternalServerError
 from celery import states
 
+import salt.runner
+import salt.client
+
 from .. import celery, socketio
 from ..utils import url_for
-from ..salt import (runner, client)
+from ..salt import opts as salt_opts
+
 
 text_types = (str, bytes)
 try:
@@ -33,6 +37,7 @@ def salt_socketio(jid, minion, sid):
 
         try:
             # Wait for salt-completion
+            client = salt.client.get_local_client()
             status = client.cmd(minion, 'saltutil.find_job', [jid])
 
             time_iteration = 1
@@ -41,6 +46,7 @@ def salt_socketio(jid, minion, sid):
                 status = client.cmd(minion, 'saltutil.find_job', [jid])
 
             # When finish call salt-run
+            runner = salt.runner.RunnerClient(salt_opts)
             result = runner.cmd('jobs.lookup_jid', [jid])
 
             if minion not in result:

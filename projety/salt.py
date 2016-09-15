@@ -13,9 +13,6 @@ from .exceptions import ValidationError, SaltError, ACLError
 
 # Global salt variable
 opts = salt.config.master_config('/etc/salt/master')
-wheel = salt.wheel.WheelClient(opts)
-runner = salt.runner.RunnerClient(opts)
-client = salt.client.LocalClient(c_path='/etc/salt/master')
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +75,7 @@ def get_minions(type='minions', use_cache=True):
     if use_cache and type in minions:
         return minions[type]
 
+    wheel = salt.wheel.WheelClient(opts)
     keys = wheel.cmd('key.list_all')
     if type not in keys:
         raise SaltError('No key {0} in key.list_all'.format(type))
@@ -141,6 +139,7 @@ class Job(object):
 
         # We might want to run async request
         function = None
+        client = salt.client.get_local_client()
         if self.async:
             function = client.cmd_async
         else:
