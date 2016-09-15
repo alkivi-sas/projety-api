@@ -106,8 +106,6 @@ class WsProxy(object):
         This function returns the HTTP response body to deliver to the client
         as a byte sequence.
         """
-        logging.warning(environ)
-
         # First upgrade a connection to websocket
         if not self._test_websocket(environ):
             r = self._bad_request('Not a websocket request')
@@ -121,11 +119,9 @@ class WsProxy(object):
         self.sockets[sid] = s
 
         # Auth stuff
-        logging.warning('testing token')
         if not self.validate_connection(environ, sid):
             r = self._bad_request('Unable to validate connection')
             return self._respond(environ, start_response, r)
-        logging.warning('token is valid !')
 
         # Handle handshake
         if not s.do_websocket_handshake(environ, start_response):
@@ -169,10 +165,7 @@ class WsProxy(object):
 
         # Validate token
         token = query['token'][0]
-        logging.warning('token is {0}'.format(token))
         data = self.token_manager.get_token(token)
-        logging.warning('data')
-        logging.warning(data)
         if not data:
             return False
 

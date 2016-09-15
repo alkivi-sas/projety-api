@@ -207,7 +207,6 @@ def post_minion_task(minion, task):
         async = data['async']
 
     if async not in ['async', 'sync', 'socket.io']:
-        logger.warning('async incorrect')
         raise ValidationError('async mode {0} not valid'.format(async))
 
     if async == 'socket.io':
@@ -217,7 +216,6 @@ def post_minion_task(minion, task):
             sid = data['sid']
 
     if task not in _get_minion_functions(minion):
-        logger.warning('wrong task')
         raise ValidationError('task {0} not valid'.format(task))
 
     is_task_allowed(task)

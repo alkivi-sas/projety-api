@@ -80,7 +80,6 @@ def get_minions(type='minions', use_cache=True):
 
     keys = wheel.cmd('key.list_all')
     if type not in keys:
-        logger.warning('Unable to get {0} in keys'.format(type))
         raise SaltError('No key {0} in key.list_all'.format(type))
     minions[type] = keys[type]
     return minions[type]
@@ -138,7 +137,6 @@ class Job(object):
         if self.only_one:
             if tgt not in get_minions():
                 msg = 'minion {0} is not valid'.format(tgt)
-                logger.warning(msg)
                 raise ValidationError(msg)
 
         # We might want to run async request
@@ -164,7 +162,6 @@ class Job(object):
         if self.only_one:
             if tgt not in result:
                 msg = 'minion {0} not in salt return'.format(tgt)
-                logger.warning(msg)
                 raise SaltError(msg)
             else:
                 return result[tgt]

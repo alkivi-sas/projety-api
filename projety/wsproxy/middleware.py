@@ -40,10 +40,8 @@ class WsProxyMiddleware(object):
         path = environ['PATH_INFO']
         if path is not None and \
                 path.startswith('/{0}'.format(self.websockify_path)):
-            logger.warning('Handling with websockify')
             return self.websockify_app.handle_request(environ, start_response)
         elif self.wsgi_app is not None:
-            logger.warning('Handline normally')
             return self.wsgi_app(environ, start_response)
         else:
             start_response("404 Not Found", [('Content-type', 'text/plain')])

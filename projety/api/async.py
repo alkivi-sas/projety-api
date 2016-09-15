@@ -33,14 +33,11 @@ def salt_socketio(jid, minion, sid):
 
         try:
             # Wait for salt-completion
-            logger.warning('testing jid {0} on minion {1}'.format(jid, minion))
             status = client.cmd(minion, 'saltutil.find_job', [jid])
 
             time_iteration = 1
             while 'jid' in status:
                 time.sleep(time_iteration)
-                logger.warning('testing jid {0} on minion {1}'.format(
-                    jid, minion))
                 status = client.cmd(minion, 'saltutil.find_job', [jid])
 
             # When finish call salt-run
@@ -91,7 +88,6 @@ def run_flask_request(environ):
     from ..wsgi_aux import app
 
     if '_wsgi.input' in environ:
-        logger.warning(environ['_wsgi.input'])
         environ['wsgi.input'] = BytesIO(environ['_wsgi.input'])
 
     # Create a request context similar to that of the original request
@@ -102,8 +98,6 @@ def run_flask_request(environ):
 
         # Run the route function and record the response
         try:
-            logger.warning('Going to run for environ')
-            logger.warning(environ)
             rv = app.full_dispatch_request()
         except:
             # If we are in debug mode we want to see the exception
