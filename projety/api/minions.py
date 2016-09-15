@@ -3,17 +3,17 @@ import logging
 import threading
 import time
 
-from flask import jsonify, current_app, request
+from flask import jsonify, current_app, request, g
 
 
 from ..exceptions import SaltError, ValidationError
 from ..salt import (get_minions as _get_minions,
                     get_minion_functions as _get_minion_functions,
-                    Job, is_task_allowed, runner, client)
+                    Job, is_task_allowed)
 from ..auth import token_auth
 from .. import wsproxy
-from .. import socketio, celery
 from . import api
+from async import salt_async, salt_socketio
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +207,7 @@ def post_minion_task(minion, task):
         async = data['async']
 
     if async not in ['async', 'sync', 'socket.io']:
+        logger.warning('async incorrect')
         raise ValidationError('async mode {0} not valid'.format(async))
 
     if async == 'socket.io':
@@ -216,60 +217,28 @@ def post_minion_task(minion, task):
             sid = data['sid']
 
     if task not in _get_minion_functions(minion):
+        logger.warning('wrong task')
         raise ValidationError('task {0} not valid'.format(task))
 
     is_task_allowed(task)
 
-    async_mode = async in ['async', 'socket.io']
-    job = Job(async=async_mode)
-    result = job.run(minion, task)
+    if async == 'socket.io':
+        job = Job(async=True)
+        jid = job.run(minion, task)
+        salt_socketio.apply_async(args=(jid, minion, sid))
+        return jsonify({'jid': jid})
 
-    if async_mode:
-        # Now launch async or socketio result if necessary ?
-        if async == 'socket.io':
-            wait_for_completion.apply_async(args=(result, minion, sid))
-            return jsonify({'jid': result})
+    if async == 'async':
+        # If run from celery, then run sync
+        if getattr(g, 'in_celery', False):
+            async = 'sync'
         else:
-            return jsonify({'todo': 'yeah'}), 202
-    else:
-        return jsonify({'result': result})
+            return salt_async(minion, task)
 
-
-@celery.task
-def wait_for_completion(jid, minion, sid):
-    """Run a wait command."""
-    from ..wsgi_aux import app
-    with app.app_context():
-
-        try:
-            # Wait for salt-completion
-            logger.warning('testing jid {0} on minion {1}'.format(jid, minion))
-            status = client.cmd(minion, 'saltutil.find_job', [jid])
-
-            time_iteration = 1
-            while 'jid' in status:
-                time.sleep(time_iteration)
-                logger.warning('testing jid {0} on minion {1}'.format(
-                    jid, minion))
-                status = client.cmd(minion, 'saltutil.find_job', [jid])
-
-            # When finish call salt-run
-            result = runner.cmd('jobs.lookup_jid', [jid])
-
-            if minion not in result:
-                raise Exception('Wrong salt return')
-            result = result[minion]
-
-            # Push data back
-            logger.warning('socketio')
-            logger.warning(socketio)
-            socketio.emit('job_result',
-                          {'jid': jid, 'status': 'success', 'result': result},
-                          room=sid)
-        except Exception as e:
-            socketio.emit('job_result',
-                          {'jid': jid, 'status': 'error', 'result': e.args[0]},
-                          room=sid)
+    if async == 'sync':
+        job = Job(async=False)
+        result = job.run(minion, task)
+        return jsonify({minion: result})
 
 
 @api.route('/v1.0/minions/<string:minion>/remote',
