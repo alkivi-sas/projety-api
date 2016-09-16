@@ -45,5 +45,5 @@ def get_ssh_host_key_fingerprint(key=None):
         key = '/etc/ssh/ssh_host_rsa_key.pub'
 
     f = subprocess.check_output('ssh-keygen -lf {0} '.format(key) +
-                                '| cut -d" " -f1', shell=True)
+                                '| cut -d" " -f2', shell=True)
     return f.rstrip()
