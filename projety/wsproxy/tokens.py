@@ -112,7 +112,7 @@ class TokenManager(object):
                 return token
             else:
                 # Clean token
-                del token
+                self._delete_token(token.minion, token.uuid)
                 return self._create_token(minion, expiration)
         else:
             return self._create_token(minion, expiration)
@@ -123,6 +123,11 @@ class TokenManager(object):
             return False
         return self.uuids[token]
 
+    def _delete_token(self, minion, uid):
+        """Clean all references to the token."""
+        del self.tokens[minion]
+        del self.uuids[uid]
+
     def clean_old_tokens(self):
         """
         Will check which token needs to be deleted.
@@ -132,8 +137,8 @@ class TokenManager(object):
         to_delete = []
         for minion, token in self.tokens.iteritems():
             if token.is_expired():
+                # Not deleting directly, because of iteritems
                 to_delete.append((minion, token.uuid))
 
         for minion, uid in to_delete:
-            del self.tokens[minion]
-            del self.uuids[uid]
+            self._delete_token(minion, uuid)
