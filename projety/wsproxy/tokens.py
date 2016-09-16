@@ -1,4 +1,7 @@
 """Generate and store token for remote control."""
+from __future__ import absolute_import
+
+import socket
 
 import uuid
 import time
@@ -26,6 +29,8 @@ class Token(object):
         self.last_seen = int(time.time())
         self.port = get_open_port()
         self.expiration = expiration
+        self.uuid = uuid.uuid4().hex
+        self.pid = None
 
         job = Job()
         result = job.run(minion,
@@ -36,10 +41,9 @@ class Token(object):
             raise SaltError('Unable to create secure connection to' +
                             '{0}'.format(minion))
         if 'pid' not in result:
-            raise SaltError('Unable to get pid of tunnel connection' +
+            raise SaltError('Unable to get pid of tunnel on ' +
                             '{0}'.format(minion))
         self.pid = result['pid']
-        self.uuid = uuid.uuid4().hex
 
     def exit_gracefully(self, signum, frame):
         """Close connection."""
@@ -59,8 +63,11 @@ class Token(object):
 
     def _close_connection(self):
         """Terminate a connection."""
-        job = Job(async=True)
-        job.run(self.minion, 'remote_control.close_ssh_connection', [self.pid])
+        if self.pid:
+            job = Job(async=True)
+            job.run(self.minion,
+                    'remote_control.close_ssh_connection',
+                    [self.pid])
 
     def refresh(self):
         """Refresh last_seen property."""
@@ -71,6 +78,15 @@ class Token(object):
         now = int(time.time())
         return now - self.last_seen > self.expiration
 
+    def ping(self):
+        """Check if the socket is still open."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect(('127.0.0.1', self.port))
+            return True
+        except:
+            return False
+
 
 class TokenManager(object):
     """Manage all the token created during the app lifetime."""
@@ -80,17 +96,26 @@ class TokenManager(object):
         self.tokens = {}
         self.uuids = {}
 
+    def _create_token(self, minion, expiration):
+        """Really create a token."""
+        token = Token(minion, expiration=expiration)
+        self.tokens[minion] = token
+        self.uuids[token.uuid] = token
+        return token
+
     def create_token(self, minion, expiration=3600):
         """Create a new token for a minion."""
         if minion in self.tokens:
             token = self.tokens[minion]
-            token.refresh()
-            return token
+            if token.ping():
+                token.refresh()
+                return token
+            else:
+                # Clean token
+                del token
+                return self._create_token(minion, expiration)
         else:
-            token = Token(minion, expiration=expiration)
-            self.tokens[minion] = token
-            self.uuids[token.uuid] = token
-            return token
+            return self._create_token(minion, expiration)
 
     def get_token(self, token):
         """Try to fetch a token."""

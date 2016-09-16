@@ -109,8 +109,8 @@ class CeleryWorker(Command):
     def run(self, argv):
         """Execute celery."""
         ret = subprocess.call(
-            #Temp patch only one worker
-            #['celery', 'worker', '-c', '1', '-A', 'projety.celery'] + argv)
+            # Temp patch only one worker
+            # ['celery', 'worker', '-c', '1', '-A', 'projety.celery'] + argv)
             ['celery', 'worker', '-A', 'projety.celery'] + argv)
         sys.exit(ret)
 
