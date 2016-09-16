@@ -32,7 +32,11 @@ class TestRemoteProxy(TestAPI):
         """Respond in a normal way to salt job."""
         minion = args[0]  # noqa
         function = args[1]  # noqa
-        data = args[2]  # noqa
+
+        # Additional arg can be there or the kwargs.get('kwarg')
+        # Cf Job.run definiton
+        if len(args) > 2:
+            data = args[2]  # noqa
 
         if function == 'remote_control.create_ssh_connection':
             return {'pid': 1234}
@@ -43,7 +47,11 @@ class TestRemoteProxy(TestAPI):
         """Respond in a error way for salt job."""
         minion = args[0]  # noqa
         function = args[1]  # noqa
-        data = args[2]  # noqa
+
+        # Additional arg can be there or the kwargs.get('kwarg')
+        # Cf Job.run definiton
+        if len(args) > 2:
+            data = args[2]  # noqa
 
         return {}
 
