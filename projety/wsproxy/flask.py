@@ -58,3 +58,11 @@ class FlaskWsProxy(object):
     def create_token(self, minion, expiration=3600):
         """Create a token to use in no_vnc."""
         return self.server.create_token(minion, expiration)
+
+    def get_token(self, minion):
+        """Get valid token for a minion if exist."""
+        return self.server.get_token(minion)
+
+    def delete_token(self, token):
+        """Delete a token."""
+        return self.server.delete_token(token)

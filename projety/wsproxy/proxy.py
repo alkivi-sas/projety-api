@@ -74,6 +74,14 @@ class WsProxy(object):
         """Create a token to use in no_vnc."""
         return self.token_manager.create_token(minion, expiration)
 
+    def get_token(self, minion):
+        """Return a valid token if it exist for a minion."""
+        return self.token_manager.get_minion_token(minion)
+
+    def delete_token(self, token):
+        """Delete a token to use in no_vnc."""
+        return self.token_manager.delete_token(token)
+
     def _test_websocket(self, environ):
         """Test environ for websocket upgrade."""
         http_upgrade = ''

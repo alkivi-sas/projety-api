@@ -272,6 +272,88 @@ def post_remote(minion):
     return jsonify({'token': token.uuid})
 
 
+@api.route('/v1.0/minions/<string:minion>/remote',
+           methods=['GET'])
+@token_auth.login_required
+def get_remote(minion):
+    """
+    Return a valid token in order to connect to a minion.
+
+    ---
+    tags:
+      - minions
+    security:
+      - token: []
+    parameters:
+      - name: minion
+        in: path
+        description: target
+        required: true
+        type: string
+    responses:
+      200:
+        description: Return token if it exist
+        schema:
+          id: token
+          required:
+            - id
+            - minion
+            - expiration
+            - last_seen
+          properties:
+            id:
+              type: string
+            minion:
+              type: string
+            expiration:
+              type: string
+            last_seen:
+              type: string
+      204:
+        description: When no token exists.
+        schema:
+          ref: $TODO
+    """
+    t = remote_proxy.get_token(minion)
+    if not t:
+        return '', 204
+    else:
+        return jsonify(t.serialize())
+
+
+@api.route('/v1.0/minions/<string:minion>/remote/<string:token>',
+           methods=['DELETE'])
+@token_auth.login_required
+def del_remote_token(minion, token):
+    """
+    Return a valid token in order to connect to a minion.
+
+    ---
+    tags:
+      - minions
+    security:
+      - token: []
+    parameters:
+      - name: minion
+        in: path
+        description: target
+        required: true
+        type: string
+      - name: token
+        in: path
+        description: target
+        required: true
+        type: string
+    responses:
+      200:
+        description: When a token is delete
+      400:
+        description: When a token is not found
+    """
+    remote_proxy.delete_token(token)
+    return ''
+
+
 @api.before_app_first_request
 def before_first_request():
     """Start a background thread to clean old tokens."""

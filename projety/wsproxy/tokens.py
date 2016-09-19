@@ -9,7 +9,7 @@ import signal
 
 import logging
 
-from ..exceptions import SaltError
+from ..exceptions import SaltError, ValidationError
 from ..utils import get_open_port
 from ..salt import Job
 
@@ -55,6 +55,13 @@ class Token(object):
             self.minion,
             self.last_seen,
             self.expiration)
+
+    def serialize(self):
+        """Return a nice dict."""
+        return {'id': self.uuid,
+                'minion': self.minion,
+                'last_seen': self.last_seen,
+                'expiration': self.expiration}
 
     def __del__(self):
         """On token deletion, close pid."""
@@ -122,6 +129,22 @@ class TokenManager(object):
         if token not in self.uuids:
             return False
         return self.uuids[token]
+
+    def get_minion_token(self, minion):
+        """Try to fetch a token for a minion."""
+        if minion not in self.tokens:
+            return False
+        return self.tokens[minion]
+
+    def delete_token(self, token):
+        """Try to delete a token."""
+        token = self.get_token(token)
+        if not token:
+            raise ValidationError('Token {0} not found'.format(token))
+        else:
+            uuid = token.uuid
+            minion = token.minion
+            return self._delete_token(minion, uuid)
 
     def _delete_token(self, minion, uid):
         """Clean all references to the token."""

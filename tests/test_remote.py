@@ -61,6 +61,12 @@ class TestRemoteProxy(TestAPI):
         # We start with ok values
         self.return_ok = True
 
+        # Now get list
+        r, s, h = self.get(
+            '/api/v1.0/minions/{0}/remote'.format(minion),
+            token_auth=token)
+        assert s == 204
+
         # Normal token create
         r, s, h = self.post(
             '/api/v1.0/minions/{0}/remote'.format(minion),
@@ -73,10 +79,37 @@ class TestRemoteProxy(TestAPI):
         r, s, h = self.post(
             '/api/v1.0/minions/{0}/remote'.format(minion),
             token_auth=token)
-        logger.warning(r)
         assert s == 200
         assert 'token' in r
         assert r['token'] == r_token
+
+        # Now get list
+        r, s, h = self.get(
+            '/api/v1.0/minions/{0}/remote'.format(minion),
+            token_auth=token)
+        assert s == 200
+        for i in ['expiration', 'id', 'minion', 'last_seen']:
+            assert i in r
+        assert r['id'] == r_token
+
+        # Delete token
+        r, s, h = self.delete(
+            '/api/v1.0/minions/{0}/remote/{1}'.format(minion, r_token),
+            token_auth=token)
+        logger.warning(r)
+        assert s == 200
+
+        # Test we have empty response
+        r, s, h = self.get(
+            '/api/v1.0/minions/{0}/remote'.format(minion),
+            token_auth=token)
+        assert s == 204
+
+        # Delete token that do not exist
+        r, s, h = self.delete(
+            '/api/v1.0/minions/{0}/remote/{1}'.format(minion, r_token),
+            token_auth=token)
+        assert s == 400
 
         # Now we want error value
         self.return_ok = False
