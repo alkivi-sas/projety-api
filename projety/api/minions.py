@@ -11,7 +11,7 @@ from ..salt import (get_minions as _get_minions,
                     get_minion_functions as _get_minion_functions,
                     Job, is_task_allowed)
 from ..auth import token_auth
-from .. import wsproxy
+from .. import remote_proxy
 from . import api
 from async import salt_async, salt_socketio
 
@@ -240,9 +240,9 @@ def post_minion_task(minion, task):
 
 
 @api.route('/v1.0/minions/<string:minion>/remote',
-           methods=['GET'])
+           methods=['POST'])
 @token_auth.login_required
-def get_remote(minion):
+def post_remote(minion):
     """
     Return a valid token in order to connect to a minion.
 
@@ -268,7 +268,7 @@ def get_remote(minion):
             token:
               type: string
     """
-    token = wsproxy.create_token(minion, expiration=3600)
+    token = remote_proxy.create_token(minion, expiration=3600)
     return jsonify({'token': token.uuid})
 
 

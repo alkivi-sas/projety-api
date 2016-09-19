@@ -4,8 +4,6 @@ import logging
 from mock import patch
 import pytest
 
-from projety.salt import Job
-from projety.api.async import async
 from utils import TestAPI
 
 logger = logging.getLogger(__name__)
@@ -15,49 +13,72 @@ logger = logging.getLogger(__name__)
 class TestRemoteProxy(TestAPI):
     """Test for celery."""
 
-    def job_side_effect(self, *args, **kwargs):
+    def token_ping_side_effect(self, *args, **kwargs):
+        """Global mock response for token.ping."""
         if self.return_ok:
-            function = self.job_side_effect_ok
+            return True
         else:
-            function = self.job_side_effect_ko
+            return False
+
+    def salt_job_side_effect(self, *args, **kwargs):
+        """Global mock response job.run."""
+        if self.return_ok:
+            function = self.salt_job_side_effect_ok
+        else:
+            function = self.salt_job_side_effect_ko
         return function(*args, **kwargs)
 
-    def job_side_effect_ok(self, *args, **kwargs):
-        """Mock return of salt according to args."""
-        minion = args[0]
-        function = args[1]
-        data = args[2]
+    def salt_job_side_effect_ok(self, *args, **kwargs):
+        """Respond in a normal way to salt job."""
+        minion = args[0]  # noqa
+        function = args[1]  # noqa
+        data = args[2]  # noqa
 
         if function == 'remote_control.create_ssh_connection':
             return {'pid': 1234}
 
         return {}
 
-    def job_side_effect_ko(self, *args, **kwargs):
-        """Mock return of salt according to args."""
-        minion = args[0]
-        function = args[1]
-        data = args[2]
+    def salt_job_side_effect_ko(self, *args, **kwargs):
+        """Respond in a error way for salt job."""
+        minion = args[0]  # noqa
+        function = args[1]  # noqa
+        data = args[2]  # noqa
 
         return {}
 
+    @patch('projety.wsproxy.tokens.Token.ping')
     @patch('projety.salt.Job.run')
-    def test_remote_token(self, mock_job):
+    def test_remote_token(self, mock_salt_job, mock_token_ping):
         """Test that the wsproxy send back data the way we want."""
-
         token = self.valid_token
         minion = self.valid_minion
 
-        # Mock salt-job to return wanted data
-        mock_job.side_effect = self.job_side_effect
+        # Mock return
+        mock_salt_job.side_effect = self.salt_job_side_effect
+        mock_token_ping.side_effect = self.token_ping_side_effect
 
+        # We start with ok values
         self.return_ok = True
+
+        # Normal token create
         r, s, h = self.post(
             '/api/v1.0/minions/{0}/remote'.format(minion),
             token_auth=token)
         assert s == 200
         assert 'token' in r
+        r_token = r['token']
 
+        # If we ask twice, we should have the same token
+        r, s, h = self.post(
+            '/api/v1.0/minions/{0}/remote'.format(minion),
+            token_auth=token)
+        logger.warning(r)
+        assert s == 200
+        assert 'token' in r
+        assert r['token'] == r_token
+
+        # Now we want error value
         self.return_ok = False
         r, s, h = self.post(
             '/api/v1.0/minions/{0}/remote'.format(minion),

@@ -23,7 +23,7 @@ from wsproxy import FlaskWsProxy
 db = SQLAlchemy()
 cors = CORS()
 socketio = SocketIO()
-wsproxy = FlaskWsProxy()
+remote_proxy = FlaskWsProxy()
 celery = Celery(__name__,
                 broker=os.environ.get('CELERY_BROKER_URL', 'redis://'),
                 backend=os.environ.get('CELERY_BROKER_URL', 'redis://'))
@@ -75,7 +75,7 @@ def create_app(config_name=None, main=True):
                           message_queue=app.config['SOCKETIO_MESSAGE_QUEUE'])
 
         # Our wsproxy is only needed for the main app
-        wsproxy.init_app(app)
+        remote_proxy.init_app(app)
     else:
         # Initialize socketio to emit events through through the message queue
         # Note that since Celery does not use eventlet, we have to be explicit
