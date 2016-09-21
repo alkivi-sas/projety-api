@@ -110,7 +110,9 @@ def is_task_allowed(task):
 
     Will be extended later.
     """
-    if task not in ['test.ping']:
+    if task not in ['test.ping', 'sys.doc', 'sys.list_functions',
+                    'remote_control.create_ssh_connection',
+                    'remote_control.close_ssh_connection']:
         raise ACLError('You are not allowed to perform {0}'.format(task))
 
 
@@ -131,11 +133,20 @@ class Job(object):
         - minion should be in the list, raise ValidationError if not
         - result should have a minion entrie, raise SaltError if not
         """
-        # Check if minion is valid
+        # Perform additional check
         if self.only_one:
             if tgt not in get_minions():
                 msg = 'minion {0} is not valid'.format(tgt)
                 raise ValidationError(msg)
+
+            # We skip check for sys.list_functions to infinite recursion
+            if fun not in 'sys.list_functions':
+                if fun not in get_minion_functions(tgt):
+                    msg = 'task {0} not valid'.format(fun)
+                    raise ValidationError(msg)
+
+        # Check ACL check
+        is_task_allowed(fun)
 
         # We might want to run async request
         function = None

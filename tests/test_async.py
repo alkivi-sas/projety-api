@@ -24,6 +24,9 @@ class TestAsync(TestAPI):
         assert len(h.getlist('Access-Control-Allow-Methods')) == 0
         assert len(h.getlist('Access-Control-Max-Age')) == 0
         assert len(h.getlist('Access-Control-Allow-Credentials')) == 0
+        logger.warning(r)
+        logger.warning(s)
+        logger.warning(h)
         assert s == 200
 
         # check that we have the minion in keys
