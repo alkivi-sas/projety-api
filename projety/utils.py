@@ -1,5 +1,6 @@
 """Some helpers functions non related to any models."""
 
+import subprocess
 import socket
 import logging
 import time
@@ -36,3 +37,13 @@ def get_open_port():
     port = s.getsockname()[1]
     s.close()
     return port
+
+
+def get_ssh_host_key_fingerprint(key=None):
+    """Return the fingerprint of the host ssh key."""
+    if not key:
+        key = '/etc/ssh/ssh_host_rsa_key.pub'
+
+    f = subprocess.check_output('ssh-keygen -lf {0} '.format(key) +
+                                '| cut -d" " -f1', shell=True)
+    return f.rstrip()

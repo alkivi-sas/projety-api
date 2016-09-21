@@ -10,7 +10,7 @@ import signal
 import logging
 
 from ..exceptions import SaltError, ValidationError
-from ..utils import get_open_port
+from ..utils import get_open_port, get_ssh_host_key_fingerprint
 from ..salt import Job
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,10 @@ class Token(object):
         job = Job()
         result = job.run(minion,
                          'remote_control.create_ssh_connection',
-                         [self.port])
+                         kwarg={
+                             'port': self.port,
+                             'hostkey': get_ssh_host_key_fingerprint()}
+                         )
 
         if not result:
             raise SaltError('Unable to create secure connection to' +
