@@ -192,21 +192,18 @@ class ProxySocket(object):
                 break
 
             if ws.socket in outs:
-                logger.warning('Send vnc packet to the websocket')
                 # Send vnc packet to the websocket
                 for pkt in cqueue:
                     ws.send(pkt)
                 cqueue = []
 
             if ws.socket in ins:
-                logger.warning('Receive websocket packet, Queue them for vnc')
                 # Receive websocket packet
                 # Queue them for vnc
                 try:
                     p = ws.wait()
-                except Exception as e:
+                except:
                     logger.warning('websocket: wait exception')
-                    logger.warning(e)
                     break
                 if p is None:
                     # connection closed by client
@@ -215,7 +212,6 @@ class ProxySocket(object):
 
             if self.proxy_socket in outs:
                 # Send queued websocket packet to vnc
-                logger.warning('Send queued websocket packet to vnc')
                 dat = tqueue.pop(0)
                 sent = self.proxy_socket.send(dat)
 
@@ -226,8 +222,6 @@ class ProxySocket(object):
                     tqueue.insert(0, dat[sent:])
 
             if self.proxy_socket in ins:
-                logger.warning('Receive vnc packet, Queue them for websocket')
-                dat = tqueue.pop(0)
                 # Receive vnc packet
                 # Queue them for websocket
                 buf = self.proxy_socket.recv(self.buffer_size)
