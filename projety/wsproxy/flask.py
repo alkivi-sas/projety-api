@@ -45,7 +45,13 @@ class FlaskWsProxy(object):
         if resource.startswith('/'):
             resource = resource[1:]
 
-        self.server = WsProxy(logger=logger)
+        if app is not None:
+            cors_allowed_origins = app.config.get('CORS_ORIGINS', '*')
+        else:
+            cors_allowed_origins = None
+
+        self.server = WsProxy(logger=logger,
+                              cors_allowed_origins=cors_allowed_origins)
         if app is not None:
             # here we attach the WsProxy middlware to the FlaskWsProxy
             # object so it can be referenced later if debug middleware needs
