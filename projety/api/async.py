@@ -17,6 +17,7 @@ import salt.client
 from .. import celery, socketio
 from ..utils import url_for
 from ..salt import opts as salt_opts
+from ..exceptions import SaltMinionError
 
 
 text_types = (str, bytes)
@@ -39,6 +40,8 @@ def salt_socketio(jid, minion, sid):
             # Wait for salt-completion
             client = salt.client.get_local_client()
             status = client.cmd(minion, 'saltutil.find_job', [jid])
+            logger.warning('init status')
+            logger.warning(status)
 
             time_iteration = 1
             while 'jid' in status:
@@ -50,15 +53,15 @@ def salt_socketio(jid, minion, sid):
             result = runner.cmd('jobs.lookup_jid', [jid])
 
             if minion not in result:
-                raise Exception('Wrong salt return')
+                raise SaltMinionError(minion)
 
             # Push data back
             socketio.emit('job_result',
                           {'jid': jid, 'status': 'success', 'result': result},
                           room=sid)
-        except Exception as e:
+        except SaltMinionError as e:
             socketio.emit('job_result',
-                          {'jid': jid, 'status': 'error', 'result': e.args[0]},
+                          {'jid': jid, 'status': 'error', 'result': str(e)},
                           room=sid)
 
 

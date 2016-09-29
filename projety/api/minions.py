@@ -6,7 +6,7 @@ import time
 from flask import jsonify, current_app, request, g
 
 
-from ..exceptions import SaltError, ValidationError
+from ..exceptions import SaltTaskError, ValidationError
 from ..salt import (get_minions as _get_minions,
                     get_minion_functions as _get_minion_functions,
                     Job)
@@ -120,7 +120,7 @@ def get_minion_task(minion, task):
     job = Job()
     result = job.run(minion, 'sys.doc', [task])
     if task not in result:
-        raise SaltError('task {0} not in salt return'.format(task))
+        raise SaltTaskError(task)
     return jsonify({'documentation': result[task]})
 
 
@@ -210,11 +210,11 @@ def post_minion_task(minion, task):
         raise ValidationError('async mode {0} not valid'.format(async))
 
     if async == 'socket.io':
-        logger.warning(request.cookies)
         if 'sid' not in data:
             raise ValidationError('must pass sid when using socket.io')
         else:
             sid = data['sid']
+    logger.warning('Post using {0}'.format(async))
 
     if async == 'socket.io':
         job = Job(async=True)

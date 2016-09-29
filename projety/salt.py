@@ -9,7 +9,7 @@ import salt.client
 import salt.runner
 
 from flask import request
-from .exceptions import ValidationError, SaltError, ACLError
+from .exceptions import ValidationError, SaltMinionError, SaltError, ACLError
 
 # Global salt variable
 opts = salt.config.master_config('/etc/salt/master')
@@ -78,7 +78,7 @@ def get_minions(type='minions', use_cache=True):
     wheel = salt.wheel.WheelClient(opts)
     keys = wheel.cmd('key.list_all')
     if type not in keys:
-        raise SaltError('No key {0} in key.list_all'.format(type))
+        raise SaltError('no key {0} in key.list_all'.format(type))
     minions[type] = keys[type]
     return minions[type]
 
@@ -113,7 +113,7 @@ def is_task_allowed(task):
     if task not in ['test.ping', 'sys.doc', 'sys.list_functions',
                     'remote_control.create_ssh_connection',
                     'remote_control.close_ssh_connection']:
-        raise ACLError('You are not allowed to perform {0}'.format(task))
+        raise ACLError(task)
 
 
 class Job(object):
@@ -131,18 +131,18 @@ class Job(object):
 
         In only_one mode, we perform some checks :
         - minion should be in the list, raise ValidationError if not
-        - result should have a minion entrie, raise SaltError if not
+        - result should have a minion entrie, raise SaltMinionError if not
         """
         # Perform additional check
         if self.only_one:
             if tgt not in get_minions():
-                msg = 'minion {0} is not valid'.format(tgt)
+                msg = 'Minion {0} is not valid'.format(tgt)
                 raise ValidationError(msg)
 
             # We skip check for sys.list_functions to infinite recursion
             if fun not in 'sys.list_functions':
                 if fun not in get_minion_functions(tgt):
-                    msg = 'task {0} not valid'.format(fun)
+                    msg = 'Task {0} not valid'.format(fun)
                     raise ValidationError(msg)
 
         # Check ACL check
@@ -156,6 +156,7 @@ class Job(object):
         else:
             function = client.cmd
 
+        logger.warning('running job {0}'.format(fun))
         result = function(tgt, fun,
                           arg=arg,
                           timeout=timeout,
@@ -171,8 +172,7 @@ class Job(object):
         # If only one, perform additional check
         if self.only_one:
             if tgt not in result:
-                msg = 'minion {0} not in salt return'.format(tgt)
-                raise SaltError(msg)
+                raise SaltMinionError(tgt)
             else:
                 return result[tgt]
         return result

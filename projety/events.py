@@ -32,15 +32,9 @@ def ping_minion(user_id, data, sid):
         try:
             result = ping_one(minion)
         except SaltError as e:
-            result = {
-                'error': 'salt wrong return',
-                'message': e.args[0],
-            }
+            result = e.to_dict()
         except ValidationError as e:
-            result = {
-                'error': 'bad request',
-                'message': e.args[0],
-            }
+            result = e.to_dict()
         push_result(result, sid)
 
 
