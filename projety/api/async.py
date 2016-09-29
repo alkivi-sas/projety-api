@@ -40,8 +40,6 @@ def salt_socketio(jid, minion, sid):
             # Wait for salt-completion
             client = salt.client.get_local_client()
             status = client.cmd(minion, 'saltutil.find_job', [jid])
-            logger.warning('init status')
-            logger.warning(status)
 
             time_iteration = 1
             while 'jid' in status:
