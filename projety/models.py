@@ -11,6 +11,29 @@ from . import db
 from .utils import timestamp, url_for
 
 
+class Acl(db.Model):
+    """The User model."""
+
+    __tablename__ = 'acls'
+    id = db.Column(db.Integer, primary_key=True)
+    minions = db.Column(db.String(256), nullable=False)
+    functions = db.Column(db.String(256), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def to_dict(self):
+        """Export user to a dictionary."""
+        return {
+            'id': self.id,
+            'minions': self.minions,
+            'functions': self.functions,
+            '_links': {
+                'self': url_for('api.get_acl',
+                                user_id=self.user_id,
+                                acl_id=self.id),
+            }
+        }
+
+
 class User(db.Model):
     """The User model."""
 
@@ -21,6 +44,7 @@ class User(db.Model):
     last_seen_at = db.Column(db.Integer, default=timestamp)
     nickname = db.Column(db.String(32), nullable=False, unique=True)
     password_hash = db.Column(db.String(256), nullable=False)
+    acls = db.relationship('Acl', backref='users')
 
     @property
     def password(self):
@@ -86,6 +110,7 @@ class User(db.Model):
             'last_seen_at': self.last_seen_at,
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
+                'acls': url_for('api.get_acls', user_id=self.id),
                 'tokens': url_for('api.new_token')
             }
         }

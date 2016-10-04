@@ -21,17 +21,18 @@ class TestAPI(object):
         """Fixture for variable common in tests."""
         self._valid_token = None
         self._valid_minion = None
-        self.valid_user = 'alkivi'
-        self.valid_password = 'alkivi123'
+        self.valid_user = 'admin'
+        self.valid_password = 'admin'
+        self.admin_user = 'admin'
+        self.admin_password = 'admin'
+        self.restricted_user = 'restricted'
+        self.restricted_password = 'restricted'
 
     @property
     def valid_token(self):
         """Get a token we know is valid."""
         if not self._valid_token:
-            r, s, h = self.post('/api/v1.0/tokens',
-                                basic_auth='alkivi:alkivi123')
-            assert s == 200
-            self._valid_token = r['token']
+            self._valid_token = self.get_valid_token(user=self.admin_user)
         return self._valid_token
 
     @property
@@ -42,6 +43,15 @@ class TestAPI(object):
                                token_auth=self.valid_token)
             self._valid_minion = r[0]
         return self._valid_minion
+
+    def get_valid_token(self, user, password=None):
+        """Return a valid token for a user."""
+        if not password:
+            password = user
+        r, s, h = self.post('/api/v1.0/tokens',
+                            basic_auth='{0}:{1}'.format(user, password))
+        assert s == 200
+        return r['token']
 
     def get_headers(self, basic_auth=None, token_auth=None):
         """Helper to get manage headers for requests."""

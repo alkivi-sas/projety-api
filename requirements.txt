@@ -8,6 +8,7 @@ flake8-docstrings
 flasgger
 flask
 flask-cors
+flask-principal
 flask_httpauth
 flask_script
 flask_sqlalchemy
