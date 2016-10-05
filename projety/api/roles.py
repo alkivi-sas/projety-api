@@ -3,22 +3,21 @@ import logging
 
 from flask import jsonify, abort, request
 
-
 from .. import db
 from ..auth import token_auth
-from ..models import User, Acl
-from ..permissions import AclReadPermission, AclWritePermission
+from ..models import User, Role
+from ..permissions import RoleReadPermission, RoleWritePermission
 from ..exceptions import RoleError, ValidationError
 from . import api
 
 logger = logging.getLogger(__name__)
 
 
-@api.route('/v1.0/users/<user_id>/acls', methods=['GET'])
+@api.route('/v1.0/users/<user_id>/roles', methods=['GET'])
 @token_auth.login_required
-def get_acls(user_id):
+def get_roles(user_id):
     """
-    Return list of ACLs.
+    Return list of Roles.
 
     ---
     tags:
@@ -33,29 +32,29 @@ def get_acls(user_id):
         type: integer
     responses:
       200:
-        description: Returns a lists of acls
+        description: Returns a lists of roles
         schema:
           type: array
           items:
-            $ref: '#/definitions/api_get_acl_get_ACL'
+            $ref: '#/definitions/api_get_role_get_Role'
       403:
         description: When forbidden by role
       404:
         description: When wrong user
     """
-    permission = AclReadPermission(user_id)
+    permission = RoleReadPermission(user_id)
     if not permission.can():
         raise RoleError(permission)
 
-    acls = User.query.get_or_404(user_id).acls
-    return jsonify([acl.to_dict() for acl in acls])
+    roles = User.query.get_or_404(user_id).roles
+    return jsonify([role.to_dict() for role in roles])
 
 
-@api.route('/v1.0/users/<user_id>/acls', methods=['POST'])
+@api.route('/v1.0/users/<user_id>/roles', methods=['POST'])
 @token_auth.login_required
-def post_acl(user_id):
+def post_role(user_id):
     """
-    Create a new ACL.
+    Create a new Role.
 
     ---
     tags:
@@ -68,24 +67,21 @@ def post_acl(user_id):
         description: ID of user
         required: true
         type: integer
-      - name: acl_data
+      - name: role_data
         in: body
-        description: acl data
+        description: role data
         required: true
         schema:
-          id: acl_data
+          id: role_data
           properties:
-            minions:
-              description: Allowed minions
-              type: string
-            functions:
-              description: Allowed functions
+            name:
+              description: Name of the role
               type: string
     responses:
       200:
-        description: Returns the new acl id
+        description: Returns the new role id
         schema:
-          id: post_acl
+          id: post_role
           required:
             - id
           properties:
@@ -96,36 +92,36 @@ def post_acl(user_id):
       404:
         description: When wrong user
     """
-    permission = AclWritePermission()
+    permission = RoleWritePermission()
     if not permission.can():
         raise RoleError(permission)
 
     data = request.json
     creation_data = {'user_id': user_id}
-    mandatory_keys = ['minions', 'functions']
+    mandatory_keys = ['name']
     for key in mandatory_keys:
         if key not in data:
             raise ValidationError('Missing post data {0}'.format(key))
         else:
             creation_data[key] = data[key]
 
-    # Now check if we already have an ACL
-    acl = Acl.query.filter_by(**creation_data).first()
-    if acl:
-        raise ValidationError('ACL already exists : id {0}'.format(acl.id))
+    # Now check if we already have an Role
+    role = Role.query.filter_by(**creation_data).first()
+    if role:
+        raise ValidationError('Role already exists : id {0}'.format(role.id))
 
-    acl = Acl(**creation_data)
-    db.session.add(acl)
+    role = Role(**creation_data)
+    db.session.add(role)
     db.session.commit()
 
-    return jsonify({'id': acl.id})
+    return jsonify({'id': role.id})
 
 
-@api.route('/v1.0/users/<user_id>/acls/<acl_id>', methods=['GET'])
+@api.route('/v1.0/users/<user_id>/roles/<role_id>', methods=['GET'])
 @token_auth.login_required
-def get_acl(user_id, acl_id):
+def get_role(user_id, role_id):
     """
-    Return an ACL.
+    Return an Role.
 
     ---
     tags:
@@ -138,16 +134,16 @@ def get_acl(user_id, acl_id):
         description: ID of user
         required: true
         type: integer
-      - name: acl_id
+      - name: role_id
         in: path
-        description: ID of the ACL
+        description: ID of the Role
         required: true
         type: integer
     responses:
       200:
         description: Returns a unique user
         schema:
-          id: ACL
+          id: Role
           required:
             - id
             - minions
@@ -155,7 +151,7 @@ def get_acl(user_id, acl_id):
           properties:
             id:
               type: integer
-              description: id of the acl
+              description: id of the role
             minions:
               type: string
               description: minions allowed
@@ -167,22 +163,22 @@ def get_acl(user_id, acl_id):
       404:
         description: When wrong user
     """
-    permission = AclReadPermission(user_id)
+    permission = RoleReadPermission(user_id)
     if not permission.can():
         raise RoleError(permission)
 
-    acl = Acl.query.get_or_404(acl_id)
-    if int(acl.user_id) != int(user_id):
+    role = Role.query.get_or_404(role_id)
+    if int(role.user_id) != int(user_id):
         abort(404)
     else:
-        return jsonify(acl.to_dict())
+        return jsonify(role.to_dict())
 
 
-@api.route('/v1.0/users/<user_id>/acls/<acl_id>', methods=['PUT'])
+@api.route('/v1.0/users/<user_id>/roles/<role_id>', methods=['PUT'])
 @token_auth.login_required
-def modify_acl(user_id, acl_id):
+def modify_role(user_id, role_id):
     """
-    Modify an existing ACL.
+    Modify an existing Role.
 
     ---
     tags:
@@ -195,55 +191,55 @@ def modify_acl(user_id, acl_id):
         description: ID of user
         required: true
         type: integer
-      - name: acl_id
+      - name: role_id
         in: path
-        description: ID of the ACL
+        description: ID of the Role
         required: true
         type: integer
-      - name: acl_data
+      - name: role_data
         in: body
-        description: acl data
+        description: role data
         required: true
         schema:
-          $ref: '#/definitions/api_post_acl_post_acl_data'
+          $ref: '#/definitions/api_post_role_post_role_data'
     responses:
       200:
         description: When successfull
       403:
         description: When forbidden by role
       404:
-        description: When wrong user or wrong acl
+        description: When wrong user or wrong role
     """
-    permission = AclWritePermission()
+    permission = RoleWritePermission()
     if not permission.can():
         raise RoleError(permission)
 
-    acl = Acl.query.get_or_404(acl_id)
-    logger.warning(acl.to_dict())
-    if int(acl.user_id) != int(user_id):
+    role = Role.query.get_or_404(role_id)
+    logger.warning(role.to_dict())
+    if int(role.user_id) != int(user_id):
         abort(404)
 
     data = request.json
     changes = False
-    mandatory_keys = ['minions', 'functions']
+    mandatory_keys = ['name']
     for key in mandatory_keys:
         if key in data:
-            if data[key] != getattr(acl, key):
-                setattr(acl, key, data[key])
+            if data[key] != getattr(role, key):
+                setattr(role, key, data[key])
                 changes = True
 
     if changes:
-        db.session.add(acl)
+        db.session.add(role)
         db.session.commit()
 
     return ''
 
 
-@api.route('/v1.0/users/<user_id>/acls/<acl_id>', methods=['DELETE'])
+@api.route('/v1.0/users/<user_id>/roles/<role_id>', methods=['DELETE'])
 @token_auth.login_required
-def delete_acl(user_id, acl_id):
+def delete_role(user_id, role_id):
     """
-    Delete an existing ACL.
+    Delete an existing Role.
 
     ---
     tags:
@@ -256,9 +252,9 @@ def delete_acl(user_id, acl_id):
         description: ID of user
         required: true
         type: integer
-      - name: acl_id
+      - name: role_id
         in: path
-        description: ID of the ACL
+        description: ID of the Role
         required: true
         type: integer
     responses:
@@ -267,18 +263,18 @@ def delete_acl(user_id, acl_id):
       403:
         description: When forbidden by role
       404:
-        description: When wrong user or wrong acl
+        description: When wrong user or wrong role
     """
-    permission = AclWritePermission()
+    permission = RoleWritePermission()
     if not permission.can():
         raise RoleError(permission)
 
-    acl = Acl.query.get_or_404(acl_id)
-    logger.warning(acl.to_dict())
-    if int(acl.user_id) != int(user_id):
+    role = Role.query.get_or_404(role_id)
+    logger.warning(role.to_dict())
+    if int(role.user_id) != int(user_id):
         abort(404)
 
-    db.session.delete(acl)
+    db.session.delete(role)
     db.session.commit()
 
     return ''

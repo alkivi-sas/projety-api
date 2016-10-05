@@ -5,6 +5,7 @@ import json
 import pytest
 
 from projety import db
+from projety.models import User
 
 
 @pytest.mark.usefixtures('client_class')
@@ -52,6 +53,11 @@ class TestAPI(object):
                             basic_auth='{0}:{1}'.format(user, password))
         assert s == 200
         return r['token']
+
+    def get_user(self, user):
+        """Return a user."""
+        user = User.query.filter_by(nickname=user).first()
+        return user
 
     def get_headers(self, basic_auth=None, token_auth=None):
         """Helper to get manage headers for requests."""

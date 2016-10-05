@@ -12,6 +12,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from flask_principal import Principal
 from flasgger import Swagger
 from celery import Celery
 
@@ -28,6 +29,7 @@ celery = Celery(__name__,
                 broker=os.environ.get('CELERY_BROKER_URL', 'redis://'),
                 backend=os.environ.get('CELERY_BROKER_URL', 'redis://'))
 swagger = Swagger()
+principal = Principal(use_sessions=False)
 
 # Import models so that they are registered with SQLAlchemy
 from . import models  # noqa
@@ -66,6 +68,7 @@ def create_app(config_name=None, main=True):
     db.init_app(app)
     cors.init_app(app)
     swagger.init_app(app)
+    principal.init_app(app)
     if main:
         # Initialize socketio server and attach it to the message queue, so
         # that everything works even when there are multiple servers or

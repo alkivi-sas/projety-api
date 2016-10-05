@@ -307,8 +307,6 @@ def get_remote(minion):
               type: string
       204:
         description: When no token exists.
-        schema:
-          ref: $TODO
     """
     t = remote_proxy.get_token(minion)
     if not t:

@@ -9,7 +9,8 @@ import salt.client
 import salt.runner
 
 from flask import request
-from .exceptions import ValidationError, SaltMinionError, SaltError, ACLError
+from .exceptions import (ValidationError, SaltMinionError, SaltError,
+                         SaltACLError)
 
 # Global salt variable
 opts = salt.config.master_config('/etc/salt/master')
@@ -113,7 +114,7 @@ def is_task_allowed(task):
     if task not in ['test.ping', 'sys.doc', 'sys.list_functions',
                     'remote_control.create_ssh_connection',
                     'remote_control.close_ssh_connection']:
-        raise ACLError(task)
+        raise SaltACLError(task)
 
 
 class Job(object):

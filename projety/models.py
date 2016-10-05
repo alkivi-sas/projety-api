@@ -12,13 +12,15 @@ from .utils import timestamp, url_for
 
 
 class Acl(db.Model):
-    """The User model."""
+    """The Acl model."""
 
     __tablename__ = 'acls'
+    __table_args__ = (db.UniqueConstraint('minions', 'functions', 'user_id'),)
+
     id = db.Column(db.Integer, primary_key=True)
     minions = db.Column(db.String(256), nullable=False)
     functions = db.Column(db.String(256), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def to_dict(self):
         """Export user to a dictionary."""
@@ -26,10 +28,35 @@ class Acl(db.Model):
             'id': self.id,
             'minions': self.minions,
             'functions': self.functions,
+            'user_id': self.user_id,
             '_links': {
                 'self': url_for('api.get_acl',
                                 user_id=self.user_id,
                                 acl_id=self.id),
+                'user': url_for('api.get_user', id=self.user_id),
+            }
+        }
+
+
+class Role(db.Model):
+    """The Role model."""
+
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(256), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def to_dict(self):
+        """Export user to a dictionary."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'user_id': self.user_id,
+            '_links': {
+                'self': url_for('api.get_role',
+                                user_id=self.user_id,
+                                role_id=self.id),
+                'user': url_for('api.get_user', id=self.user_id),
             }
         }
 
@@ -45,6 +72,7 @@ class User(db.Model):
     nickname = db.Column(db.String(32), nullable=False, unique=True)
     password_hash = db.Column(db.String(256), nullable=False)
     acls = db.relationship('Acl', backref='users')
+    roles = db.relationship('Role', backref='users')
 
     @property
     def password(self):

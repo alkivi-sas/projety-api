@@ -7,7 +7,7 @@ import pytest
 
 from projety import create_app, socketio
 from projety import db as _db
-from projety.models import User, Acl
+from projety.models import User, Acl, Role
 
 
 @pytest.fixture(scope='session')
@@ -44,7 +44,10 @@ def db(app, request):
     a1 = Acl(minions='.*', functions='.*', user_id=u1.id)
     a2 = Acl(minions='.*', functions='network.ip_addrs', user_id=u2.id)
 
-    _db.session.add_all([a1, a2])
+    r1 = Role(name='admin', user_id=u1.id)
+    r2 = Role(name='basic', user_id=u2.id)
+
+    _db.session.add_all([a1, a2, r1, r2])
     _db.session.commit()
 
     request.addfinalizer(teardown)

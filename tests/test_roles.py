@@ -6,52 +6,52 @@ from utils import TestAPI
 logger = logging.getLogger(__name__)
 
 
-class TestAcls(TestAPI):
+class TestRoles(TestAPI):
     """Test for users."""
 
-    def test_users_acl(self):
-        """Test users ACL."""
+    def test_users_role(self):
+        """Test access of roles."""
         admin_token = self.get_valid_token('admin')
         admin = self.get_user('admin')
-        mandatory_keys = ['minions', 'id', 'functions', 'user_id']
+        mandatory_keys = ['id', 'name', 'user_id']
 
-        # get acls list for the admin user
-        url = '/api/v1.0/users/{0}/acls'.format(admin.id)
+        # get roles list for the admin user
+        url = '/api/v1.0/users/{0}/roles'.format(admin.id)
         r, s, h = self.get(url, token_auth=admin_token)
         assert s == 200
         assert isinstance(r, list)
-        admin_acl = r[0]['id']
+        admin_role = r[0]['id']
 
-        # get acl for admin
-        url = '/api/v1.0/users/{0}/acls/{1}'.format(admin.id, admin_acl)
+        # get role for admin
+        url = '/api/v1.0/users/{0}/roles/{1}'.format(admin.id, admin_role)
         r, s, h = self.get(url, token_auth=admin_token)
         assert s == 200
         assert isinstance(r, dict)
-        for i in ['minions', 'id', 'functions', 'user_id']:
+        for i in mandatory_keys:
             assert i in r
 
         restricted_token = self.get_valid_token('restricted')
         restricted = self.get_user('restricted')
 
-        # get acls list for the restricted user
-        url = '/api/v1.0/users/{0}/acls'.format(restricted.id)
+        # get roles list for the restricted user
+        url = '/api/v1.0/users/{0}/roles'.format(restricted.id)
         r, s, h = self.get(url, token_auth=restricted_token)
         assert s == 200
         assert isinstance(r, list)
-        restricted_acl = r[0]['id']
+        restricted_role = r[0]['id']
 
-        # get acl for restricted
-        url = '/api/v1.0/users/{0}/acls/{1}'.format(restricted.id,
-                                                    restricted_acl)
+        # get role for restricted
+        url = '/api/v1.0/users/{0}/roles/{1}'.format(restricted.id,
+                                                     restricted_role)
         r, s, h = self.get(url, token_auth=restricted_token)
         assert s == 200
         assert isinstance(r, dict)
         for i in mandatory_keys:
             assert i in r
 
-        # Now check that admin can see restricted acl
-        url = '/api/v1.0/users/{0}/acls/{1}'.format(restricted.id,
-                                                    restricted_acl)
+        # Now check that admin can see restricted role
+        url = '/api/v1.0/users/{0}/roles/{1}'.format(restricted.id,
+                                                     restricted_role)
         r, s, h = self.get(url, token_auth=admin_token)
         assert s == 200
         assert isinstance(r, dict)
@@ -59,19 +59,19 @@ class TestAcls(TestAPI):
             assert i in r
 
         # But not the other way around
-        url = '/api/v1.0/users/{0}/acls/{1}'.format(admin.id,
-                                                    admin_acl)
+        url = '/api/v1.0/users/{0}/roles/{1}'.format(admin.id,
+                                                     admin_role)
         r, s, h = self.get(url, token_auth=restricted_token)
         assert s == 403
 
-        # Now add a new acl to restricted
-        data = {'minions': self.valid_minion, 'functions': 'test.ping'}
-        url = '/api/v1.0/users/{0}/acls'.format(restricted.id)
+        # Now add a new role to restricted
+        data = {'name': 'toto'}
+        url = '/api/v1.0/users/{0}/roles'.format(restricted.id)
         r, s, h = self.post(url, data=data, token_auth=admin_token)
         logger.warning(r)
         assert s == 200
         assert 'id' in r
-        new_acl_id = r['id']
+        new_role_id = r['id']
 
         # Post twice with the same : error
         r, s, h = self.post(url, data=data, token_auth=admin_token)
@@ -83,36 +83,36 @@ class TestAcls(TestAPI):
         logger.warning(r)
         assert s == 403
 
-        # Put acl as admin
-        data = {'functions': 'test.*'}
-        url = '/api/v1.0/users/{0}/acls/{1}'.format(restricted.id, new_acl_id)
+        # Put role as admin
+        data = {'name': 'tata'}
+        url = '/api/v1.0/users/{0}/roles/{1}'.format(restricted.id,
+                                                     new_role_id)
         r, s, h = self.put(url, data=data, token_auth=admin_token)
         logger.warning(r)
         assert s == 200
 
-        # Put acl as restricted
+        # Put role as restricted
         r, s, h = self.put(url, data=data, token_auth=restricted_token)
         logger.warning(r)
         assert s == 403
 
-        # Get modified acl
+        # Get modified role
         r, s, h = self.get(url, token_auth=restricted_token)
         logger.warning(r)
         assert s == 200
-        assert r['minions'] == self.valid_minion
-        assert r['functions'] == 'test.*'
+        assert r['name'] == 'tata'
 
-        # Delete acl as restricted
+        # Delete role as restricted
         r, s, h = self.delete(url, token_auth=restricted_token)
         logger.warning(r)
         assert s == 403
 
-        # Delete acl as admin
+        # Delete role as admin
         r, s, h = self.delete(url, token_auth=admin_token)
         logger.warning(r)
         assert s == 200
 
-        # Get old acl
+        # Get old role
         r, s, h = self.get(url, token_auth=admin_token)
         logger.warning(r)
         assert s == 404

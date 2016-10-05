@@ -53,6 +53,21 @@ class ACLError(ApiError):
         return 'you are not allowed to perform {0}'.format(self.message)
 
 
+class RoleError(ApiError):
+    """Base class for exceptions ACL."""
+
+    def __init__(self, permission, message=None, error=None, status_code=403):
+        """Simple init."""
+        if not error:
+            error = 'access denied via roles'
+        super(RoleError, self).__init__(message, error, status_code)
+        self.permission = permission
+
+    def __str__(self):
+        """Custom representation."""
+        return 'you are forbidden to do that'
+
+
 class SaltMinionError(SaltError):
     """Exception for wrong salt return."""
 
@@ -62,8 +77,24 @@ class SaltMinionError(SaltError):
 
 
 class SaltTaskError(SaltError):
-    """Exception for wrong salt return."""
+    """Exception for salt task."""
 
     def __str__(self):
         """Custom representation."""
         return 'task {0} not in salt return'.format(self.message)
+
+
+class SaltACLError(ACLError):
+    """Exception for salt ACL."""
+
+    def __str__(self):
+        """Custom representation."""
+        return 'you are not allowed to perform {0}'.format(self.message)
+
+
+class RoleACLError(ACLError):
+    """Exception for roles."""
+
+    def __str__(self):
+        """Custom representation."""
+        return 'you are not allowed to perform {0}'.format(self.message)
