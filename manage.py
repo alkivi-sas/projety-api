@@ -23,7 +23,7 @@ from flask_script import Manager, Command, Server as _Server, Option
 
 
 from projety import create_app, db, socketio
-from projety.models import User
+from projety.models import User, Acl, Role
 
 manager = Manager(create_app)
 
@@ -126,15 +126,31 @@ def createdb(drop_first=False):
 
 
 @manager.command
-def cleantoken(user=None):
-    """Clean the token database."""
-    for u in User.query.all():
-        if user and u.nickname != user:
-            continue
-        u.token = None
-        db.session.add(u)
-        db.session.commit()
-        print 'Token for {0} cleaned'.format(u.nickname)
+def createacl(name, minions, functions):
+    """Create an acl for a specific user."""
+    user = User.query.filter_by(nickname=name).first()
+    if not user:
+        user = createuser(name)
+
+    acl = Acl(minions=minions, functions=functions, user_id=user.id)
+    db.session.add(acl)
+    db.session.commit()
+    print 'Acl for minion {0} with functions {1} created '.format(minions,
+                                                                  functions) +\
+          'for user {0}'.format(name)
+
+
+@manager.command
+def createrole(name, role):
+    """Create a role for a specific user."""
+    user = User.query.filter_by(nickname=name).first()
+    if not user:
+        user = createuser(name)
+
+    r = Role(name=role, user_id=user.id)
+    db.session.add(r)
+    db.session.commit()
+    print 'Role {0} created for user {1}'.format(role, name)
 
 
 @manager.command
@@ -154,7 +170,7 @@ def createuser(name, expiration=3600):
 
     token = user.generate_auth_token(expiration=expiration)
     print 'Here is a valid token : {0}'.format(token)
-    return
+    return user
 
 
 @manager.command
