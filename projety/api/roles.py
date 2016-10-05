@@ -141,23 +141,23 @@ def get_role(user_id, role_id):
         type: integer
     responses:
       200:
-        description: Returns a unique user
+        description: Returns a unique role
         schema:
           id: Role
           required:
             - id
-            - minions
-            - functions
+            - name
+            - user_id
           properties:
             id:
               type: integer
               description: id of the role
-            minions:
+            name:
               type: string
-              description: minions allowed
-            functions:
-              type: string
-              description: functions allowed
+              description: name of the role
+            user_id:
+              type: integer
+              description: id of the user
       403:
         description: When forbidden by role
       404:

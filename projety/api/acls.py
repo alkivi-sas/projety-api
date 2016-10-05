@@ -152,6 +152,7 @@ def get_acl(user_id, acl_id):
             - id
             - minions
             - functions
+            - user_id
           properties:
             id:
               type: integer
@@ -162,6 +163,9 @@ def get_acl(user_id, acl_id):
             functions:
               type: string
               description: functions allowed
+            user_id:
+              type: integer
+              description: id of the user
       403:
         description: When forbidden by role
       404:
