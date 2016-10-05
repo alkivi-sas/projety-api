@@ -9,6 +9,34 @@ logger = logging.getLogger(__name__)
 class TestAcls(TestAPI):
     """Test for users."""
 
+    def test_users_salt_call(self):
+        """Test Salt ACL."""
+        minion = self.valid_minion
+
+        admin_token = self.get_valid_token('admin')
+
+        url = '/api/v1.0/minions/{0}/tasks/{1}'.format(minion, 'test.ping')
+        data = {'async': 'sync'}
+        r, s, h = self.post(url, data=data, token_auth=admin_token)
+        logger.warning(r)
+        assert s == 200
+        assert minion in r
+
+        restricted_token = self.get_valid_token('restricted')
+
+        url = '/api/v1.0/minions/{0}/tasks/{1}'.format(minion, 'test.ping')
+        data = {'async': 'sync'}
+        r, s, h = self.post(url, data=data, token_auth=restricted_token)
+        logger.warning(r)
+        assert s == 403
+
+        url = '/api/v1.0/minions/{0}/tasks/{1}'.format(minion,
+                                                       'network.ip_addrs')
+        data = {'async': 'sync'}
+        r, s, h = self.post(url, data=data, token_auth=restricted_token)
+        logger.warning(r)
+        assert s == 200
+
     def test_users_acl(self):
         """Test users ACL."""
         admin_token = self.get_valid_token('admin')

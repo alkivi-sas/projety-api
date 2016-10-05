@@ -128,6 +128,28 @@ class User(db.Model):
                 if not partial_update:
                     abort(400)
 
+    def get_salt_acl(self):
+        """
+        Export user acl to a dictionary.
+
+        Will need to be update later on.
+        """
+        data = []
+        dict_data = {}
+        for acl in self.acls:
+            minions = str(acl.minions)
+            functions = str(acl.functions)
+            if minions == '.*':
+                data.append(functions)
+            else:
+                if minions not in dict_data:
+                    dict_data[minions] = []
+                dict_data[minions].append(functions)
+
+        for minion, functions in dict_data.iteritems():
+            data.append({minion: functions})
+        return data
+
     def to_dict(self):
         """Export user to a dictionary."""
         return {

@@ -87,9 +87,18 @@ class SaltTaskError(SaltError):
 class SaltACLError(ACLError):
     """Exception for salt ACL."""
 
+    def __init__(self, tgt, fun, arg,
+                 message=None, error=None, status_code=403):
+        """Simple init."""
+        super(SaltACLError, self).__init__(message, error, status_code)
+        self.tgt = tgt
+        self.fun = fun
+        self.arg = arg
+
     def __str__(self):
         """Custom representation."""
-        return 'you are not allowed to perform {0}'.format(self.message)
+        return 'you are not allowed to perform {0} on {1}'.format(self.fun,
+                                                                  self.tgt)
 
 
 class RoleACLError(ACLError):

@@ -27,6 +27,9 @@ def ping_minion(user_id, data, sid):
         if user is None:
             return
 
+        # Installing current_user
+        g.current_user = user
+
         # Run the salt Job
         minion = data['minion']
         try:

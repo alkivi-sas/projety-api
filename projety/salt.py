@@ -7,8 +7,9 @@ import salt.config
 import salt.wheel
 import salt.client
 import salt.runner
+import salt.utils.minions
 
-from flask import request
+from flask import request, g
 from .exceptions import (ValidationError, SaltMinionError, SaltError,
                          SaltACLError)
 
@@ -24,7 +25,6 @@ functions = {}
 
 def ping_one(minion):
     """Return a simple test.ping."""
-    logger.debug('going to ping {0}'.format(minion))
     job = Job()
     result = job.run(minion, 'test.ping')
     if not result:
@@ -60,7 +60,6 @@ def ping():
         raise ValidationError('minions list is not valid')
 
     real_target = ','.join(minions)
-    logger.debug('Going to ping {0} as a list'.format(real_target))
     job = Job(only_one=False)
     result = job.run(real_target, 'test.ping', expr_form='list')
     return result
@@ -105,16 +104,33 @@ def get_minion_functions(minion):
     return result
 
 
-def is_task_allowed(task):
+def is_task_allowed(tgt, fun, arg, tgt_type):
     """
     Check weither if the current user is allowed to run a task.
 
     Will be extended later.
     """
-    if task not in ['test.ping', 'sys.doc', 'sys.list_functions',
-                    'remote_control.create_ssh_connection',
-                    'remote_control.close_ssh_connection']:
-        raise SaltACLError(task)
+    if not g.current_user:
+        logger.warning('This is weird, we should have a user here.')
+        raise SaltACLError(tgt, fun, arg)
+
+    checker = salt.utils.minions.CkMinions(opts)
+    auth_list = g.current_user.get_salt_acl()
+    logger.debug('auth_list for {0}'.format(g.current_user.nickname))
+    logger.debug(auth_list)
+    logger.debug('fun {0} tgt {1}'.format(fun, tgt))
+    data = {
+        'auth_list': auth_list,
+        'funs': str(fun),
+        'args': arg,
+        'tgt': str(tgt),
+        'tgt_type': tgt_type}
+    return checker.auth_check(**data)
+
+    # if task not in ['test.ping', 'sys.doc', 'sys.list_functions',
+    #                 'remote_control.create_ssh_connection',
+    #                 'remote_control.close_ssh_connection']:
+    #     raise SaltACLError(task)
 
 
 class Job(object):
@@ -147,7 +163,9 @@ class Job(object):
                     raise ValidationError(msg)
 
         # Check ACL check
-        is_task_allowed(fun)
+        good = is_task_allowed(tgt, fun, arg, expr_form)
+        if not good:
+            raise SaltACLError(tgt, fun, arg, expr_form)
 
         # We might want to run async request
         function = None
@@ -157,7 +175,10 @@ class Job(object):
         else:
             function = client.cmd
 
-        logger.warning('running job {0}'.format(fun))
+        info = 'launching {0} on {1}, '.format(fun, tgt) + \
+               'using args {0}, '.format(str(arg)) + \
+               'targeting using {0}'.format(expr_form)
+        logger.info(info)
         result = function(tgt, fun,
                           arg=arg,
                           timeout=timeout,
@@ -167,6 +188,7 @@ class Job(object):
                           kwarg=kwarg,
                           **kwargs)
 
+        logger.debug('result is {0}'.format(result))
         if self.async:
             return result
 
