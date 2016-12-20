@@ -176,6 +176,22 @@ def createuser(name, expiration=3600):
 
 
 @manager.command
+def resetuser(name):
+    """Create a user and display its password and token."""
+    user = User.query.filter_by(nickname=name).first()
+    if user:
+        print 'User {0} already exist'.format(name)
+
+    password = generate_password()
+    user.password = password
+    db.session.add(user)
+    db.session.commit()
+
+    print 'User {0} created with password {1}'.format(user.nickname,
+                                                      password)
+
+
+@manager.command
 def api_test():
     """Run unit tests."""
     from swagger_spec_validator import validate_spec_url
