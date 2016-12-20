@@ -97,6 +97,7 @@ class Server(_Server):
                      use_reloader=use_reloader,
                      **self.server_options)
 
+
 manager.add_command("runserver", Server())
 
 
@@ -113,6 +114,7 @@ class CeleryWorker(Command):
             # ['celery', 'worker', '-c', '1', '-A', 'projety.celery'] + argv)
             ['celery', 'worker', '-A', 'projety.celery'] + argv)
         sys.exit(ret)
+
 
 manager.add_command("celery", CeleryWorker())
 
