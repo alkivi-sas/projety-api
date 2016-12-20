@@ -1,9 +1,7 @@
 """Handles /keys endpoints."""
 import logging
-import threading
-import time
 
-from flask import jsonify, current_app, request, g
+from flask import jsonify, request, g
 
 
 from ..exceptions import SaltTaskError, ValidationError
@@ -346,22 +344,3 @@ def del_remote_token(minion, token):
     """
     remote_proxy.delete_token(token)
     return ''
-
-
-@api.before_app_first_request
-def before_first_request():
-    """Start a background thread to clean old tokens."""
-    def clean_old_tokens(app):
-        with app.app_context():
-            while True:
-                websockify = app.extensions['websockify']
-                token_manager = websockify.server.token_manager
-                token_manager.clean_old_tokens()
-                time.sleep(5)
-
-    if 'websockify' in current_app.extensions:
-        if not current_app.config['TESTING']:
-            thread = threading.Thread(
-                target=clean_old_tokens,
-                args=(current_app._get_current_object(),))
-            thread.start()

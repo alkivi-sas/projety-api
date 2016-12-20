@@ -136,10 +136,11 @@ def is_task_allowed(tgt, fun, arg, tgt_type):
 class Job(object):
     """Represents a Salt Job."""
 
-    def __init__(self, only_one=True, async=False):
+    def __init__(self, only_one=True, async=False, bypass_check=False):
         """Keep trace of only_one to automatically raise error."""
         self.only_one = only_one
         self.async = async
+        self.bypass_check = bypass_check
 
     def run(self, tgt, fun, arg=(), timeout=None, expr_form='glob', ret='',
             jid='', kwarg=None, **kwargs):
@@ -163,9 +164,10 @@ class Job(object):
                     raise ValidationError(msg)
 
         # Check ACL check
-        good = is_task_allowed(tgt, fun, arg, expr_form)
-        if not good:
-            raise SaltACLError(tgt, fun, arg, expr_form)
+        if not self.bypass_check:
+            good = is_task_allowed(tgt, fun, arg, expr_form)
+            if not good:
+                raise SaltACLError(tgt, fun, arg, expr_form)
 
         # We might want to run async request
         function = None
