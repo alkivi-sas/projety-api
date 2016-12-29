@@ -179,8 +179,9 @@ def createuser(name, expiration=3600):
 def resetuser(name):
     """Create a user and display its password and token."""
     user = User.query.filter_by(nickname=name).first()
-    if user:
-        print 'User {0} already exist'.format(name)
+    if not user:
+        print 'User {0} do not exists.'.format(name) + \
+              'Create it with createuser first.'
 
     password = generate_password()
     user.password = password
