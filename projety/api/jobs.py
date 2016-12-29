@@ -21,7 +21,7 @@ def cleaning():
                 websockify = app.extensions['websockify']
                 token_manager = websockify.server.token_manager
                 token_manager.clean_old_tokens()
-                time.sleep(5)
+                time.sleep(app.config['CLEANING_SLEEP'])
 
     if 'websockify' in current_app.extensions:
         if not current_app.config['TESTING']:
@@ -53,7 +53,7 @@ def auto_ping():
                 socketio.emit('auto_ping', result)
 
                 # Sleep 30 seconds between calls
-                time.sleep(30)
+                time.sleep(app.config['AUTO_PING_SLEEP'])
 
     if 'socketio' in current_app.extensions:
         if not current_app.config['TESTING']:
