@@ -1,3 +1,2 @@
 [flake8]
 exclude = .git,__pycache__,build,dist,venv
-filename = projety/,config.py,manage.py,tests/
