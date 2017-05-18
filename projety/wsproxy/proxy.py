@@ -60,7 +60,7 @@ class WsProxy(object):
         for mode in modes:
             try:
                 self.async = importlib.import_module(
-                    'engineio.async_' + mode)._async
+                    'engineio.async_' + mode).async
                 self.async_mode = mode
                 break
             except ImportError:

@@ -18,7 +18,7 @@ class TestAsync(TestAPI):
         r, s, h = self.post('/api/v1.0/tasks/ping/{0}'.format(minion),
                             token_auth=token)
         # During test we want 0 header
-        assert len(h.getlist('Access-Control-Allow-Origin')) == 1
+        assert len(h.getlist('Access-Control-Allow-Origin')) == 0
         assert len(h.getlist('Access-Control-Allow-Headers')) == 0
         assert len(h.getlist('Access-Control-Expose-Headers')) == 0
         assert len(h.getlist('Access-Control-Allow-Methods')) == 0
