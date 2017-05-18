@@ -117,7 +117,7 @@ def run_flask_request(environ):
 
 def async(f):
     """
-    Custom Decorator for async request.
+    Define the custom Decorator for async request.
 
     Decorator that transforms a sync route to asynchronous by running it
     in a background thread.

@@ -13,14 +13,14 @@ class WsProxyMiddleware(object):
 
     def __init__(self, websockify_app, flask_app,
                  websockify_path='websockify'):
-        """Simple init."""
+        """Init."""
         self.flask_app = flask_app
         self.websockify_app = websockify_app
         self.wsgi_app = flask_app.wsgi_app
         self.websockify_path = websockify_path
 
     def __call__(self, environ, start_response):
-        """Wrapper for call dispatch that dispatch request."""
+        """Wrap the call that dispatch request."""
         environ['flask.app'] = self.flask_app
         if 'gunicorn.socket' in environ:
             # gunicorn saves the socket under environ['gunicorn.socket'], while

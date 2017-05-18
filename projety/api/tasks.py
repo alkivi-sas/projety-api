@@ -41,6 +41,7 @@ def get_status(id):
             type: string
       200:
         description: Real result of the task
+
     """
     task = run_flask_request.AsyncResult(id)
     if task.state in [states.PENDING, states.RECEIVED, states.STARTED]:

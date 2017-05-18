@@ -43,7 +43,7 @@ def ping_minion(user_id, data, sid):
 
 @socketio.on('login')
 def on_login(nickname, password, expiration=600):
-    """Callback from socket.io client on webapp."""
+    """Define the login callback used by socket.io."""
     if verify_password(nickname, password):
         token = g.current_user.generate_auth_token(expiration)
         socketio.emit('login', {'token': token}, room=request.sid)
@@ -54,7 +54,7 @@ def on_login(nickname, password, expiration=600):
 
 @socketio.on('sid')
 def on_get_sid(token):
-    """Callback to get sid."""
+    """Define the sid callback used by socket.io."""
     verify_token(token)
     if g.current_user:
         socketio.emit('sid', {'sid': request.sid}, room=request.sid)
@@ -62,7 +62,7 @@ def on_get_sid(token):
 
 @socketio.on('ping_minion')
 def on_ping_minion(data, token):
-    """Callback from socket.io client on webapp."""
+    """Define the ping_minion callback used by socket.io."""
     verify_token(token)
     if g.current_user:
         ping_minion.apply_async(args=(g.current_user.id, data,

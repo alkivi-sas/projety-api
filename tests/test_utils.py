@@ -3,11 +3,10 @@ import logging
 import os
 
 from utils import TestAPI
-
-logger = logging.getLogger(__name__)
-
 from projety.utils import (get_open_port,
                            get_ssh_host_key_fingerprint)
+
+logger = logging.getLogger(__name__)
 
 
 class TestAsync(TestAPI):

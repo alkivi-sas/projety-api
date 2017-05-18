@@ -41,7 +41,7 @@ class WsProxy(object):
     def __init__(self, async_mode=None,
                  cookie='websockify', cors_allowed_origins=None,
                  cors_credentials=True, **kwargs):
-        """Simple init."""
+        """Init."""
         self.cookie = cookie
         self.cors_allowed_origins = cors_allowed_origins
         self.cors_credentials = cors_credentials

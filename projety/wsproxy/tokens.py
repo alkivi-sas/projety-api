@@ -53,7 +53,7 @@ class Token(object):
         self._close_connection()
 
     def __repr__(self):
-        """Custom representation."""
+        """Represent a token."""
         return 'Token for {0}, last-seen {1}, expiration {2}'.format(
             self.minion,
             self.last_seen,

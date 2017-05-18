@@ -40,6 +40,7 @@ def new_token():
             token:
               type: string
               description: A valid token for the user
+
     """
     expiration = request.args.get('expiration', 600)
     try:

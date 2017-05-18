@@ -41,6 +41,7 @@ def get_roles(user_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = RoleReadPermission(user_id)
     if not permission.can():
@@ -91,6 +92,7 @@ def post_role(user_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = RoleWritePermission()
     if not permission.can():
@@ -162,6 +164,7 @@ def get_role(user_id, role_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = RoleReadPermission(user_id)
     if not permission.can():
@@ -209,6 +212,7 @@ def modify_role(user_id, role_id):
         description: When forbidden by role
       404:
         description: When wrong user or wrong role
+
     """
     permission = RoleWritePermission()
     if not permission.can():
@@ -264,6 +268,7 @@ def delete_role(user_id, role_id):
         description: When forbidden by role
       404:
         description: When wrong user or wrong role
+
     """
     permission = RoleWritePermission()
     if not permission.can():

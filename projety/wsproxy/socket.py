@@ -28,7 +28,7 @@ class ProxySocket(object):
         pass
 
     def __init__(self, server, sid):
-        """Simple init."""
+        """Init."""
         self.server = server
         self.sid = sid
 
@@ -45,7 +45,7 @@ class ProxySocket(object):
         self.proxy_socket = None
 
     def setup_proxy(self, port):
-        """Setup proxy socket."""
+        """Create the proxy socket."""
         self.proxy_port = port
 
         # Create proxy_socket and connect to it
@@ -158,7 +158,7 @@ class ProxySocket(object):
         return ws(environ, start_response)
 
     def _websocket_handler(self, ws):
-        """Handler for websocket transport."""
+        """Create the handler for websocket transport."""
         cqueue = []
         c_pend = 0
         tqueue = []

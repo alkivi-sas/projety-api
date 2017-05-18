@@ -42,6 +42,7 @@ def get_acls(user_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = AclReadPermission(user_id)
     if not permission.can():
@@ -95,6 +96,7 @@ def post_acl(user_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = AclWritePermission()
     if not permission.can():
@@ -170,6 +172,7 @@ def get_acl(user_id, acl_id):
         description: When forbidden by role
       404:
         description: When wrong user
+
     """
     permission = AclReadPermission(user_id)
     if not permission.can():
@@ -217,6 +220,7 @@ def modify_acl(user_id, acl_id):
         description: When forbidden by role
       404:
         description: When wrong user or wrong acl
+
     """
     permission = AclWritePermission()
     if not permission.can():
@@ -271,7 +275,9 @@ def delete_acl(user_id, acl_id):
       403:
         description: When forbidden by role
       404:
+
         description: When wrong user or wrong acl
+
     """
     permission = AclWritePermission()
     if not permission.can():

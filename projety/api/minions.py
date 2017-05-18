@@ -70,6 +70,7 @@ def get_minion_tasks(minion):
         description: Minion is not found
       500:
         description: Error in salt return
+
     """
     return jsonify(_get_minion_functions(minion))
 
@@ -111,6 +112,7 @@ def get_minion_task(minion, task):
         description: Minion or task is not found
       500:
         description: Error in salt return
+
     """
     if task not in _get_minion_functions(minion):
         raise ValidationError('task {0} not valid'.format(task))
@@ -196,6 +198,7 @@ def post_minion_task(minion, task):
         description: ACL deny access to this task
       500:
         description: Error in salt return
+
     """
     data = request.json
 
@@ -261,6 +264,7 @@ def post_remote(minion):
           properties:
             token:
               type: string
+
     """
     token = remote_proxy.create_token(minion, expiration=3600)
     return jsonify({'token': token.uuid})
@@ -305,6 +309,7 @@ def get_remote(minion):
               type: string
       204:
         description: When no token exists.
+
     """
     t = remote_proxy.get_token(minion)
     if not t:
@@ -341,6 +346,7 @@ def del_remote_token(minion, token):
         description: When a token is delete
       400:
         description: When a token is not found
+
     """
     remote_proxy.delete_token(token)
     return ''

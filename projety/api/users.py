@@ -25,6 +25,7 @@ def get_users():
           type: array
           items:
             $ref: '#/definitions/api_get_user_get_User'
+
     """
     users = User.query.order_by(User.updated_at.asc(), User.nickname.asc())
     return jsonify([user.to_dict() for user in users.all()])
@@ -74,5 +75,6 @@ def get_user(id):
               type: string
               format: date-time
               description: date of creation
+
     """
     return jsonify(User.query.get_or_404(id).to_dict())

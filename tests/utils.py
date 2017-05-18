@@ -1,5 +1,4 @@
 """Basic class for our test."""
-
 import base64
 import json
 import pytest
@@ -60,7 +59,7 @@ class TestAPI(object):
         return user
 
     def get_headers(self, basic_auth=None, token_auth=None):
-        """Helper to get manage headers for requests."""
+        """Manage headers for requests."""
         headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -73,7 +72,7 @@ class TestAPI(object):
         return headers
 
     def get(self, url, basic_auth=None, token_auth=None):
-        """Method to get."""
+        """GET method helper."""
         rv = self.client.get(url,
                              headers=self.get_headers(basic_auth, token_auth))
         # clean up the database session, since this only occurs when the app
@@ -88,7 +87,7 @@ class TestAPI(object):
         return body, rv.status_code, rv.headers
 
     def post(self, url, data=None, basic_auth=None, token_auth=None):
-        """Method to post."""
+        """POST method helper."""
         d = data if data is None else json.dumps(data)
         rv = self.client.post(url, data=d,
                               headers=self.get_headers(basic_auth, token_auth))
@@ -104,7 +103,7 @@ class TestAPI(object):
         return body, rv.status_code, rv.headers
 
     def put(self, url, data=None, basic_auth=None, token_auth=None):
-        """Method to put."""
+        """PUT method helper."""
         d = data if data is None else json.dumps(data)
         rv = self.client.put(url, data=d,
                              headers=self.get_headers(basic_auth, token_auth))
@@ -120,7 +119,7 @@ class TestAPI(object):
         return body, rv.status_code, rv.headers
 
     def delete(self, url, basic_auth=None, token_auth=None):
-        """Method to delete."""
+        """DELETE method helper."""
         rv = self.client.delete(url, headers=self.get_headers(basic_auth,
                                                               token_auth))
         # clean up the database session, since this only occurs when the app

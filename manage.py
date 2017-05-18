@@ -17,7 +17,7 @@ import random
 import string
 
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch()  # noqa
 
 from flask_script import Manager, Command, Server as _Server, Option
 
@@ -29,7 +29,7 @@ manager = Manager(create_app)
 
 
 def generate_password(length=15):
-    """Helper to generate password for new users."""
+    """Generate a password for new users."""
     chars = string.ascii_letters + string.digits + '!@#$%^&*()'
     random.seed = (os.urandom(1024))
     return ''.join(random.choice(chars) for i in range(length))
@@ -41,7 +41,7 @@ class Server(_Server):
     help = description = 'Runs the Socket.IO web server'
 
     def get_options(self):
-        """Parsing of options."""
+        """Create the parser of options."""
         options = (
             Option('-h', '--host',
                    dest='host',
@@ -80,7 +80,7 @@ class Server(_Server):
 
     def __call__(self, app, host, port, use_debugger, use_reloader):
         """
-        Custom caller for runserver.
+        Define the custom caller for runserver.
 
         Override the default runserver command to start a Socket.IO server.
         """
@@ -211,8 +211,7 @@ def test():
 @manager.command
 def lint():
     """Run code linter."""
-    lint = subprocess.call(['flake8', '--ignore=E402', 'projety/',
-                            'config.py', 'manage.py', 'tests/']) == 0
+    lint = subprocess.call(['flake8']) == 0
     if lint:
         print('OK')
     sys.exit(lint)

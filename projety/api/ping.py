@@ -43,6 +43,7 @@ def ping_one(minion):
               type: boolean
       400:
         description: When minion is not found
+
     """
     return jsonify(_ping_one(minion))
 
@@ -88,6 +89,7 @@ def ping():
               type: boolean
       400:
         description: When all minions are not found
+
     """
     return jsonify(_ping())
 
@@ -125,6 +127,7 @@ def async_ping_one(minion):
           $ref: '#/definitions/api_ping_post_ping'
       400:
         description: The minion is not in the valid keys
+
     """
     return jsonify(_ping_one(minion))
 
@@ -163,5 +166,6 @@ def async_ping():
           $ref: '#/definitions/api_ping_post_ping'
       400:
         description: All the minions are not in the valid keys
+
     """
     return jsonify(_ping())

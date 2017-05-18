@@ -5,7 +5,7 @@ Use to return a flask app configured.
 """
 import os
 import logging
-logging.debug('init because of salt')
+logging.debug('init because of salt')  # noqa
 
 
 from flask import Flask
